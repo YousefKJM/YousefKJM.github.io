@@ -1,0 +1,16 @@
+# main links
+main:
+  - title: "Posts library"
+    url: /year-archive/
+  - title: "Code library"
+    url: https://github.com/YousefKJM
+  - title: "About me"
+    url: /about-me/
+  # - title: "About"
+  #   url: https://mmistakes.github.io/minimal-mistakes/about/
+  # - title: "Sample Posts"
+  #   url: /year-archive/
+  # - title: "Sample Collections"
+  #   url: /collection-archive/
+  # - title: "Sitemap"
+  #   url: /sitemap/
