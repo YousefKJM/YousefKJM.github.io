@@ -1,7 +1,8 @@
 ---
-layout: post
-title: MS Azure DevOps for ASP .NET Core Web apps
+title: "Azure DevOps with ASP .NET Core Web apps"
 excerpt: "In this article I would like to present how to use Azure DevOps to provide continuous integration and delivery for ASP .NET Core Web Apps."
+header:
+  image: /images/posts/article2/adevops1.png
 ---
 
 <p align="center">
