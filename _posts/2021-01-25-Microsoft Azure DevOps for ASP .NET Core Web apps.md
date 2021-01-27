@@ -9,6 +9,8 @@ header:
 <img src="/images/posts/article2/adevops1.png?raw=true" alt="Microsoft Azure DevOps for ASP .NET Core Web apps"/>
 </p>
 
+<!-- > **_P.S.:_**  I cleaned up resources, so some likes would not . -->
+
 <h3><strong>Short introduction</strong></h3>
 Before we start with Microsoft Azure DevOps service lets explain what DevOps is. "DevOps is the union of people, process, and products to enable continuous delivery of value to your end users." As you can see this is not one specific thing. Azure DevOps is a solution created to support this "union". It provides tools to manage team work collected in the backlog, it provides GIT repositories to store the code, it provides automatic builds and releases once there is new feature commited. In this article I would like to present how to use Azure DevOps to provide continuous integration and delivery for ASP .NET Core Web Apps. If you want to read more about Azure DevOps visit <a href="https://azure.com/devops" target="_blank" rel="noopener">official website</a>.
 
@@ -103,6 +105,10 @@ We can move forward to the next section.
 &nbsp;
 <h3><strong>Release pipeline setup</strong></h3>
 <img class="alignnone wp-image-1604" src="/images/posts/article2/adevops24.png?w=300" alt="" width="171" height="119" />
+
+
+> **_NOTE:_**  <span style="color:red"> I scaled down Azure service plan to the free tier to stop billing so all deployment slots has been removed and I may do clean all resources after a while so some links below will not work properly.</span>
+
 
 We will host our application using Microsoft Azure Web App service. In this section I would like to present how to use Azure Web App deployment slots so you can deploy two (or more) versions of the application so its available under different URL addresses. You can read more about deployment slots <a href="https://docs.microsoft.com/en-us/azure/app-service/web-sites-staged-publishing" target="_blank" rel="noopener">here</a>. As a result of below setup we will configure two different release pipelines: one for demo and one for production.
 
