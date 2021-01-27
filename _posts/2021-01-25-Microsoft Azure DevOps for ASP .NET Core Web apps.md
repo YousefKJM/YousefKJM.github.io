@@ -107,7 +107,7 @@ We can move forward to the next section.
 <img class="alignnone wp-image-1604" src="/images/posts/article2/adevops24.png?w=300" alt="" width="171" height="119" />
 
 
-> **_NOTE:_**  <span style="color:red"> I scaled down Azure service plan to the free tier to stop billing so all deployment slots has been removed and I may do clean all resources after a while so some links below will not work properly.</span>
+> **_NOTE:_**  <span style="color:red"> I scaled down Azure service plan to the free tier to stop billing so all deployment slots has been removed and I may do clean up all resources after a while so some links below will not work properly.</span>
 
 
 We will host our application using Microsoft Azure Web App service. In this section I would like to present how to use Azure Web App deployment slots so you can deploy two (or more) versions of the application so its available under different URL addresses. You can read more about deployment slots <a href="https://docs.microsoft.com/en-us/azure/app-service/web-sites-staged-publishing" target="_blank" rel="noopener">here</a>. As a result of below setup we will configure two different release pipelines: one for demo and one for production.
