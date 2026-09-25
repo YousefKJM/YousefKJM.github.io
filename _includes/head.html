@@ -38,13 +38,12 @@
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
   <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ '/feed.xml' | absolute_url }}">
 
-  <!-- Applied before first paint to avoid a light-mode flash for dark-mode users -->
+  <!-- Dark is the site default; only an explicit toggle (saved below) overrides it -->
   <script>
     (function () {
       var stored = null;
       try { stored = localStorage.getItem('theme'); } catch (e) {}
-      var theme = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute('data-theme', stored || 'dark');
     })();
   </script>
 </head>
