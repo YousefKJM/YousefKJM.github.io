@@ -1,0 +1,31 @@
+---
+layout: default
+---
+{% assign words = content | strip_html | number_of_words %}
+{% assign read_mins = words | divided_by: 200 | at_least: 1 %}
+<article class="wrap post">
+  <header class="post__header">
+    <a class="post__back" href="{{ '/' | relative_url }}">&larr; All posts</a>
+    <h1 class="post__title">{{ page.title }}</h1>
+    <div class="post__meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time>
+      <span class="post-card__dot" aria-hidden="true">&middot;</span>
+      <span>{{ read_mins }} min read</span>
+    </div>
+  </header>
+
+  <div class="post__content">
+    {{ content }}
+  </div>
+
+  <footer class="post__footer">
+    <div class="author-card">
+      <img class="author-card__avatar" src="{{ site.author.avatar | relative_url }}" alt="{{ site.author.name }}" width="56" height="56" loading="lazy">
+      <div>
+        <strong>{{ site.author.name }}</strong>
+        <p>{{ site.author.role }}</p>
+      </div>
+    </div>
+    <a class="post__back post__back--footer" href="{{ '/' | relative_url }}">&larr; Back to all posts</a>
+  </footer>
+</article>

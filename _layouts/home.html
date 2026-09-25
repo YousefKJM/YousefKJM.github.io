@@ -1,22 +1,26 @@
 ---
-layout: archive
+layout: default
 ---
+<section class="hero wrap">
+  <p class="hero__eyebrow">Hi, I&rsquo;m {{ site.author.name }}</p>
+  <h1 class="hero__title">{{ site.tagline }}</h1>
+  <p class="hero__lede">
+    I&rsquo;m a {{ site.author.role }}, previously a full-stack developer and cloud
+    engineer. This is where I write up things I learn along the way &mdash; from
+    incident response and detection engineering to cloud infrastructure and code.
+  </p>
+  <div class="hero__links">
+    <a href="{{ site.author.website }}" target="_blank" rel="noopener" class="button button--primary">View my portfolio</a>
+    <a href="{{ '/about/' | relative_url }}" class="button button--ghost">About me</a>
+  </div>
+</section>
 
-{{ content }}
-
-<h3 class="archive__subtitle">{{ site.data.ui-text[site.locale].recent_posts | default: "Recent Posts" }}</h3>
-
-{% if paginator %}
-  {% assign posts = paginator.posts %}
-{% else %}
-  {% assign posts = site.posts %}
-{% endif %}
-
-{% assign entries_layout = page.entries_layout | default: 'list' %}
-<div class="entries-{{ entries_layout }}">
-  {% for post in posts %}
-    {% include archive-single.html type=entries_layout %}
-  {% endfor %}
-</div>
-
-{% include paginator.html %}
+<section class="wrap posts-list" aria-label="Blog posts">
+  {% if site.posts.size > 0 %}
+    {% for post in site.posts %}
+      {% include post-card.html post=post %}
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">No posts yet &mdash; check back soon.</p>
+  {% endif %}
+</section>

@@ -1,0 +1,13 @@
+{% assign post = include.post %}
+{% assign words = post.content | strip_html | number_of_words %}
+{% assign read_mins = words | divided_by: 200 | at_least: 1 %}
+<a class="post-card" href="{{ post.url | relative_url }}">
+  <div class="post-card__meta">
+    <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
+    <span class="post-card__dot" aria-hidden="true">&middot;</span>
+    <span>{{ read_mins }} min read</span>
+  </div>
+  <h2 class="post-card__title">{{ post.title }}</h2>
+  <p class="post-card__excerpt">{{ post.excerpt | default: post.content | strip_html | truncate: 160 }}</p>
+  <span class="post-card__cta">Read post <span class="post-card__arrow" aria-hidden="true">&rarr;</span></span>
+</a>
