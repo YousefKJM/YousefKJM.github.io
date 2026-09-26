@@ -5,18 +5,32 @@ excerpt: "A working cheat sheet for Windows incident response — how $STANDARD_
 
 I keep coming back to two posters on my wall: SANS FOR500's timestamp/artifact poster and FOR508's "Hunt Evil" poster. Between them they cover most of what you need in the first two hours of a Windows intrusion case — but they're a few years old in places, and a poster can't hold a "here's the gotcha" the way a page can. This is that page: the same core reference, corrected where Windows has moved on, with the 2025–2026 artifacts (Recall, PCA, the ShimCache research) that didn't exist when those posters were printed.
 
-Both original posters are below if you want to work from the source directly — everything after them is my own writeup.
+Both original posters are below — click either page to open the full, searchable PDF in a new tab. Everything after them is my own writeup.
 
-<div style="display:grid;gap:2rem;margin:2rem 0;">
+<div style="display:flex;flex-direction:column;gap:2.5rem;margin:2rem 0;">
   <div>
-    <p style="margin-bottom:0.5rem;"><strong>SANS FOR500 — Windows Forensic Analysis poster</strong><br>
-    <a href="{{ '/assets/files/sans-for500-windows-forensic-poster.pdf' | relative_url }}" target="_blank" rel="noopener">Open full size in a new tab &rarr;</a></p>
-    <iframe src="{{ '/assets/files/sans-for500-windows-forensic-poster.pdf' | relative_url }}" style="width:100%;height:70vh;border:1px solid var(--border);border-radius:var(--radius-m);box-shadow:var(--shadow);" title="SANS FOR500 Windows Forensic Analysis poster" loading="lazy"></iframe>
+    <p style="margin-bottom:0.75rem;"><strong>SANS FOR500 — Windows Forensic Analysis poster</strong><br>
+    <a href="{{ '/assets/files/sans-for500-windows-forensic-poster.pdf' | relative_url }}" target="_blank" rel="noopener">Open full PDF in a new tab &rarr;</a></p>
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+      <a href="{{ '/assets/files/sans-for500-windows-forensic-poster.pdf' | relative_url }}" target="_blank" rel="noopener">
+        <img src="{{ '/assets/images/dfir-posters/for500-page1.jpg' | relative_url }}" alt="SANS FOR500 Windows Forensic Analysis poster, page 1" loading="lazy" style="width:100%;height:auto;display:block;border:1px solid var(--border);border-radius:var(--radius-m);box-shadow:var(--shadow);">
+      </a>
+      <a href="{{ '/assets/files/sans-for500-windows-forensic-poster.pdf' | relative_url }}" target="_blank" rel="noopener">
+        <img src="{{ '/assets/images/dfir-posters/for500-page2.jpg' | relative_url }}" alt="SANS FOR500 Windows Forensic Analysis poster, page 2" loading="lazy" style="width:100%;height:auto;display:block;border:1px solid var(--border);border-radius:var(--radius-m);box-shadow:var(--shadow);">
+      </a>
+    </div>
   </div>
   <div>
-    <p style="margin-bottom:0.5rem;"><strong>SANS FOR508 — Hunt Evil poster</strong><br>
-    <a href="{{ '/assets/files/sans-for508-hunt-evil-poster.pdf' | relative_url }}" target="_blank" rel="noopener">Open full size in a new tab &rarr;</a></p>
-    <iframe src="{{ '/assets/files/sans-for508-hunt-evil-poster.pdf' | relative_url }}" style="width:100%;height:70vh;border:1px solid var(--border);border-radius:var(--radius-m);box-shadow:var(--shadow);" title="SANS FOR508 Hunt Evil poster" loading="lazy"></iframe>
+    <p style="margin-bottom:0.75rem;"><strong>SANS FOR508 — Hunt Evil poster</strong><br>
+    <a href="{{ '/assets/files/sans-for508-hunt-evil-poster.pdf' | relative_url }}" target="_blank" rel="noopener">Open full PDF in a new tab &rarr;</a></p>
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+      <a href="{{ '/assets/files/sans-for508-hunt-evil-poster.pdf' | relative_url }}" target="_blank" rel="noopener">
+        <img src="{{ '/assets/images/dfir-posters/for508-page1.jpg' | relative_url }}" alt="SANS FOR508 Hunt Evil poster, page 1" loading="lazy" style="width:100%;height:auto;display:block;border:1px solid var(--border);border-radius:var(--radius-m);box-shadow:var(--shadow);">
+      </a>
+      <a href="{{ '/assets/files/sans-for508-hunt-evil-poster.pdf' | relative_url }}" target="_blank" rel="noopener">
+        <img src="{{ '/assets/images/dfir-posters/for508-page2.jpg' | relative_url }}" alt="SANS FOR508 Hunt Evil poster, page 2" loading="lazy" style="width:100%;height:auto;display:block;border:1px solid var(--border);border-radius:var(--radius-m);box-shadow:var(--shadow);">
+      </a>
+    </div>
   </div>
 </div>
 
