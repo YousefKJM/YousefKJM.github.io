@@ -6,13 +6,20 @@ layout: post
 
 I built this while studying for the **Magnet Certified Forensics Examiner (MCFE)** certification. Rather than a static notes page, I put everything into an interactive tool: a 100-question practice bank, collapsible module summaries, mind maps for all 12 AX200 modules, a searchable DFIR lab reference, community intel from practitioners who've sat the exam, and a pre-exam checklist.
 
-It runs entirely in the browser, no account required — opens in a new tab since Claude's artifact viewer can't be embedded inline.
+Use it below — it runs entirely in the browser, no account required.
 
-<div style="margin:2rem 0;padding:28px 24px;border-radius:var(--radius-m);border:1px solid var(--border);background:var(--bg-elevated);text-align:center;">
-  <p style="margin:0 0 4px;font-weight:600;color:var(--text);">MCFE Exam Prep — Interactive Study App</p>
-  <p style="margin:0 0 18px;font-size:0.9rem;color:var(--text-muted);">100 practice questions · module mind maps · DFIR lab reference · pre-exam checklist</p>
-  <a href="https://claude.ai/artifact/P6amsvzn2fcVFZKcPNiCbt" target="_blank" rel="noopener" class="button button--primary" style="color:var(--accent-contrast);text-decoration:none;">Open the study app →</a>
+<div style="position:relative;width:100%;height:90vh;margin:2rem 0;border-radius:var(--radius-m);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow, 0 10px 30px rgba(0,0,0,0.3));">
+  <iframe
+    src="/MCFE-Exam-Prep/"
+    style="width:100%;height:100%;border:none;display:block;"
+    title="MCFE Exam Prep App"
+    loading="lazy">
+  </iframe>
 </div>
+
+<p style="text-align:center;font-size:0.85rem;color:var(--text-muted);margin-top:-1rem;">
+  Having trouble loading? <a href="/MCFE-Exam-Prep/" target="_blank" rel="noopener">Open the app in a new tab →</a>
+</p>
 
 ---
 
