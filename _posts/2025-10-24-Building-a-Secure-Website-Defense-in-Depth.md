@@ -84,7 +84,7 @@ CSP is the one worth doing properly rather than copy-pasting. Start in **report-
 - **Least-privilege IAM.** The database user your app connects as should not be able to `DROP TABLE`. The deploy role should not have console access to every other environment. Scope every credential to exactly what it needs.
 - **WAF in front of the app** — not a substitute for fixing the code, but it buys you time against the automated scanning that hits every public IP within hours of going live, and it's often your first alert that something's being probed.
 - **Network segmentation:** database and internal services on a private subnet, not reachable from the internet even if a security group rule gets fat-fingered later.
-- If you're running containers, see my [earlier post on container DFIR](/DFIR-Considerations-for-Docker-Containers/) for what changes when the thing you're securing is ephemeral by design.
+- If you're running containers, see my [post on container DFIR](/DFIR-Considerations-for-Docker-Containers/) for what changes when the thing you're securing is ephemeral by design.
 
 ## 7. CI/CD: the pipeline is part of your attack surface
 
