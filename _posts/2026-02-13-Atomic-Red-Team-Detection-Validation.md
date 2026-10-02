@@ -3,7 +3,7 @@ title: "Atomic Red Team: Prove Your Detections Actually Fire"
 excerpt: "You bought the EDR, you wrote the rules, you drew the dashboard. But would any of it actually catch an attacker? Atomic Red Team lets you safely run real ATT&CK techniques against your own lab and watch whether your detections light up — here's how to use it the right way."
 header:
   image: /images/posts/atomic-red-team/hero.jpg
-tags: [Detection, DFIR, detection-engineering, MITRE-ATTACK, purple-team, SOC, tools, PowerShell]
+tags: [Detection, Offensive, detection-engineering, MITRE-ATTACK, purple-team, SOC, adversary-emulation, PowerShell]
 ---
 ![Atomic Red Team: prove your detections actually fire](/images/posts/atomic-red-team/hero.jpg)
 
