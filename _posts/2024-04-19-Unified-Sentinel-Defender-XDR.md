@@ -68,7 +68,7 @@ DeviceProcessEvents
 | project Timestamp, DeviceName, ProcessCommandLine, DestinationIP_s
 ```
 
-**3. Security Copilot in the console.** The natural-language assistant sits in the same portal — summarise an incident, explain a script, draft a KQL query, generate a hunting lead. Microsoft cites meaningful speed-ups for analysts using it; treat the exact numbers as vendor figures, but the direction (faster triage on routine incidents) matches what people report. Just remember everything from my [prompt-injection post](/Prompt-Injection-In-Phishing/): an assistant that reads attacker-influenced content is itself part of the attack surface.
+**3. Security Copilot in the console.** The natural-language assistant sits in the same portal — summarise an incident, explain a script, draft a KQL query, generate a hunting lead. Microsoft cites meaningful speed-ups for analysts using it; treat the exact numbers as vendor figures, but the direction (faster triage on routine incidents) matches what people report. Just remember that an assistant which reads attacker-influenced content (alerts, emails, logs) is itself part of the attack surface — prompt injection is a real concern the moment you let a model act on untrusted input.
 
 **4. One place to learn.** For a junior analyst, "where do I go?" finally has one answer. That alone lowers the onboarding cliff that a two-portal SOC quietly imposed.
 
@@ -114,13 +114,13 @@ It's a smooth switch, but it's still a change to your primary investigation surf
 A few specifics worth calling out:
 
 - **Prerequisites.** You need a Sentinel workspace and at least one onboarded Defender XDR workload to get the unified experience.
-- **Primary workspace.** Multi-workspace environments behave differently from single-workspace ones; know which workspace is primary and how cross-workspace queries resolve in the new view (I wrote about cross-workspace design in the [Intune field manual](/Microsoft-Intune-Field-Manual/) logging section — the same thinking applies).
+- **Primary workspace.** Multi-workspace environments behave differently from single-workspace ones; know which workspace is primary and how cross-workspace queries resolve in the new view — the same cross-workspace design thinking you apply to any multi-workspace Sentinel deployment.
 - **RBAC.** Permissions carry over, but the *surfaces* people reach change. Verify that the right people see the right incidents and nobody accidentally gained or lost visibility.
 - **Don't break your automation.** Playbooks, Logic Apps and API callers that assumed the old portal or incident shape should be regression-tested, exactly like any other change to a production system.
 
 ## So — game-changer, or marketing?
 
-Honestly, somewhere sensible in between. It is not a new detection engine and it will not improve your coverage on its own — your analytics rules, your log sources and your tuning still decide whether you catch anything (which is exactly why you still [validate detections with Atomic Red Team](/Atomic-Red-Team-Detection-Validation/)). What it *does* remove is friction: one queue, one hunting language over everything, one assistant, one place to train people. For a Microsoft-centric SOC, less context-switching is a real, compounding win — analysts are faster and make fewer correlation mistakes when the whole story lives in one view.
+Honestly, somewhere sensible in between. It is not a new detection engine and it will not improve your coverage on its own — your analytics rules, your log sources and your tuning still decide whether you catch anything (which is exactly why you still have to validate your detections against real techniques, not assume the portal does it for you). What it *does* remove is friction: one queue, one hunting language over everything, one assistant, one place to train people. For a Microsoft-centric SOC, less context-switching is a real, compounding win — analysts are faster and make fewer correlation mistakes when the whole story lives in one view.
 
 My take: onboard it, but treat it as an operational change, not a free upgrade. Pilot it with a couple of analysts, work the checklist above, and keep measuring the thing that actually matters — time to detect and time to respond — rather than the number of portals.
 
