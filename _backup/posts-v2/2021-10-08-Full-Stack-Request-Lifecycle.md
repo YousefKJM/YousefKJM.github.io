@@ -1,6 +1,6 @@
 ---
 title: "What Happens When a User Clicks Save: The Full-Stack Request Lifecycle"
-excerpt: "Browser, DNS, TLS, load balancer, web server, app, database — one click travels through all of them. Where each hop breaks, what it looks like, and the first tool to reach for."
+excerpt: "In this article I would like to follow a single click through every layer of a web application — browser, DNS, TLS, load balancer, web server, application and database — and show what can go wrong at each step and how to find it quickly."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -27,12 +27,12 @@ excerpt: "Browser, DNS, TLS, load balancer, web server, app, database — one cl
 </svg>
 </div>
 
-With a [Vue 3 frontend](/Vue-3-Composition-API-Cheat-Sheet/) and a [Django REST API](/Django-REST-API-in-10-Steps/) in place, there's still everything in between: the whole path from a user's click to a row in the database and back. Owning that path is what "full-stack" really means.
+<h3><strong>Short introduction</strong></h3>
+In my last two articles we built a [Vue 3 frontend](/Vue-3-Composition-API-Cheat-Sheet/) and a [Django REST API](/Django-REST-API-in-10-Steps/). Being a full-stack developer means owning everything in between as well — the whole path from a user's click to a row in the database and back. In my web development work, I learned that when something is slow or broken, the important skill is not knowing every framework, but knowing <strong>which step</strong> of that path to look at. In this article I would like to follow one click through all of these steps, shown in the diagram above, and explain how to find the problem at each one.
 
-My web development work taught me that when something is slow or broken, the skill that matters isn't knowing every framework — it's knowing <strong>which hop</strong> to look at. The diagram above is that path; below is how each hop fails and how to catch it.
-
-## The eight steps of a request
-Here is what happens when a user clicks "Save" on a form:
+&nbsp;
+<h3><strong>The eight steps of a request</strong></h3>
+Lets follow what happens when a user clicks "Save" on a form:
 
 1. **Browser** — a JavaScript click handler sends `fetch('/api/items', {method: 'POST'})`.
 2. **DNS** — the browser converts `api.example.com` to an IP address, checking the browser, OS and resolver caches.
@@ -43,7 +43,8 @@ Here is what happens when a user clicks "Save" on a form:
 7. **Database** — a connection from the pool runs the query and commits the transaction.
 8. **Back up the stack** — the JSON response returns to the browser, which updates the state and re-renders.
 
-## What breaks at each step
+&nbsp;
+<h3><strong>What breaks at each step</strong></h3>
 Every step has its typical problems. This is the table I wish I had when I started:
 
 | Step | Typical problem | Symptom | First tool to use |
@@ -57,10 +58,11 @@ Every step has its typical problems. This is the table I wish I had when I start
 | 7 Database | Missing index, locks, connection pool full | Slow everywhere at peak times | `EXPLAIN ANALYZE`, slow query log |
 | 8 Render | Huge payload, re-rendering everything | Fast API but slow page | DevTools Performance tab |
 
-> **Fastest diagnosis:** The Network tab in the browser DevTools tells you the step in seconds. Click the request and open "Timing": a long <em>DNS lookup</em> means step 2, a long <em>Initial connection / SSL</em> means step 3, a long <em>Waiting (TTFB)</em> means the server side (steps 4–7), and a long <em>Content download</em> means the response is too big.
+> **_NOTE:_**  The Network tab in the browser DevTools tells you the step in seconds. Click the request and open "Timing": a long <em>DNS lookup</em> means step 2, a long <em>Initial connection / SSL</em> means step 3, a long <em>Waiting (TTFB)</em> means the server side (steps 4–7), and a long <em>Content download</em> means the response is too big.
 
-## A simple full stack for a new project
-For a new small-to-medium web app, this is what I would pick today, and why:
+&nbsp;
+<h3><strong>A simple full stack for a new project</strong></h3>
+In this section I want to share what I would choose for a new small-to-medium web app, and why:
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -72,7 +74,8 @@ For a new small-to-medium web app, this is what I would pick today, and why:
 | Hosting | PaaS, like [Azure App Service](/Azure-App-Service-Hosting-Guide/) | No OS patching until you really need it |
 | Observability | Structured logs with request IDs | One ID across all steps = one search to trace a request |
 
-## Good habits at every layer
+&nbsp;
+<h3><strong>Good habits at every layer</strong></h3>
 <strong>Frontend</strong>
 
 1. Disable the button after the first click — otherwise double clicks become duplicate rows.
@@ -89,7 +92,8 @@ For a new small-to-medium web app, this is what I would pick today, and why:
 2. Put multi-step writes in a transaction — a half-saved record is worse than a failed save.
 3. Use a connection pool; opening a new connection for every request fails under load.
 
-## Request IDs: one search to follow a request
+&nbsp;
+<h3><strong>Request IDs: one search to follow a request</strong></h3>
 The habit that helped me the most is adding a <strong>request ID</strong> at the first step and logging it everywhere. In Django, this is a small middleware:
 
 ```python
@@ -110,6 +114,6 @@ class RequestIDMiddleware:
 
 When a user reports "it failed", ask for the ID shown in the error message. One search in the logs, and you can see the whole path of that request.
 
-## Find the hop, then the bug
-
-Every bug lives at one of the hops between the click and the database. Find the hop first, then the bug: the Network tab, a request ID and `EXPLAIN` will locate most problems before you even open the editor. Chrome's <a href="https://developer.chrome.com/docs/devtools/network/reference/" target="_blank" rel="noopener">DevTools Network reference</a> explains every timing field.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Every bug lives at one of the steps between the click and the database. Find the step first, then the bug: the Network tab, a request ID and `EXPLAIN` will locate most problems before you even open your editor. You can read more about the Network tab timing in the official <a href="https://developer.chrome.com/docs/devtools/network/reference/" target="_blank" rel="noopener">Chrome DevTools documentation</a>.

@@ -1,6 +1,6 @@
 ---
 title: "Part-of-Speech Tagging with a Hidden Markov Model and Viterbi"
-excerpt: "Is \"count\" a noun or a verb? A Hidden Markov Model trained by counting and decoded with Viterbi — tested on the Brown corpus, including the smoothing mistake that made it lose to a one-line baseline."
+excerpt: "In this article I would like to present how a Hidden Markov Model tags each word in a sentence with its part of speech — training it by counting, decoding with the Viterbi algorithm, and testing it on the Brown corpus, including the smoothing mistake that made it lose to a simple baseline."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -28,11 +28,11 @@ excerpt: "Is \"count\" a noun or a verb? A Hidden Markov Model trained by counti
 </svg>
 </div>
 
-<strong>"Count"</strong> is a noun in <em>"the count was wrong"</em> and a verb in <em>"count the votes"</em>. A dictionary can't tell which; only the context can. Choosing the right grammatical role for every word — part-of-speech (POS) tagging — sits underneath speech synthesis, search and plenty of other NLP tasks.
+<h3><strong>Short introduction</strong></h3>
+The word <strong>"count"</strong> is a noun in <em>"the count was wrong"</em> and a verb in <em>"count the votes"</em>. A dictionary can't decide which one it is — only the context can. Part-of-speech (POS) tagging is the task of choosing the right grammatical role for every word in a sentence, and it is used in speech synthesis, information retrieval and many other NLP tasks. For an individual NLP project, I implemented a POS tagger using a <strong>Hidden Markov Model (HMM)</strong>. In this article I would like to walk you through it step by step, and share the real results of testing it on the Brown corpus — including a mistake that is very easy to make.
 
-For an individual NLP project I built a POS tagger on a <strong>Hidden Markov Model (HMM)</strong> and tested it on the Brown corpus. The results were real, and so was the mistake I made along the way — one that's very easy to repeat.
-
-## The model
+&nbsp;
+<h3><strong>The model</strong></h3>
 The diagram at the top of this article shows the idea. The tags (DET, NOUN, VERB, …) are <strong>hidden states</strong> — we can't see them. What we see are the words. The model has two tables, and both of them are just counts from a tagged corpus:
 
 | Table | Question it answers | Estimated as |
@@ -43,7 +43,8 @@ The diagram at the top of this article shows the idea. The tags (DET, NOUN, VERB
 
 For the data I used the <strong>Brown corpus</strong> from NLTK with the universal tagset (12 tags). It has 57,340 tagged sentences, which I split 80% for training and 20% for testing.
 
-## Step 1 — Train by counting
+&nbsp;
+<h3><strong>Step 1 — Train by counting</strong></h3>
 Training an HMM means counting. There is no gradient descent:
 
 ```python
@@ -62,7 +63,8 @@ def train(tagged_sentences):
     return start, trans, emit, tag_count
 ```
 
-## Step 2 — Decode with Viterbi
+&nbsp;
+<h3><strong>Step 2 — Decode with Viterbi</strong></h3>
 Now we need to find the best tag sequence for a new sentence. Trying every combination is impossible: 12 tags over a 20-word sentence is 12²⁰ sequences. The <strong>Viterbi algorithm</strong> uses dynamic programming instead: for every word and every tag, it keeps <strong>only the best path that ends in that tag</strong>, then follows the back-pointers at the end:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -121,9 +123,10 @@ def viterbi(words, tags, start, trans, tag_count, emit_logp):
 
 This runs in `O(n × T²)`: for 20 words and 12 tags, that is under 3,000 steps instead of 12²⁰.
 
-> **Numerical trap:** Always work with <strong>log probabilities</strong>. Multiplying 20 small probabilities becomes 0.0 in floating point (underflow). Adding their logs doesn't.
+> **_NOTE:_**  Always work with <strong>log probabilities</strong>. Multiplying 20 small probabilities becomes 0.0 in floating point (underflow). Adding their logs doesn't.
 
-## Step 3 — Emission probabilities and the mistake I made
+&nbsp;
+<h3><strong>Step 3 — Emission probabilities and the mistake I made</strong></h3>
 A word that never appeared with a tag in training gets probability 0, and one zero kills every path through it. The textbook fix is <strong>add-one (Laplace) smoothing</strong>: add 1 to every count. So the obvious first version uses it for emissions too:
 
 ```python
@@ -171,13 +174,14 @@ count the votes .      →  count/VERB  the/DET  votes/NOUN  ./.
 the count was wrong .  →  the/DET  count/NOUN  was/VERB  wrong/ADJ  ./.
 ```
 
-## Step 4 — Evaluate honestly
+&nbsp;
+<h3><strong>Step 4 — Evaluate honestly</strong></h3>
 This experiment is a good reminder of three rules worth following for any model:
 
 1. **Always compare with a simple baseline first.** Without the baseline, 93.96% would have looked like a good result.
 2. **Report unknown words separately.** The overall number hides how badly a model handles words it has never seen.
 3. **Split by sentence**, and never evaluate on sentences the model was trained on.
 
-## The real lesson
-
-An HMM is trained by counting and decoded with Viterbi, and it can still tell "count the votes" from "the count was wrong". But the biggest lesson wasn't the algorithm — it was the evaluation. Textbook smoothing made the model worse than a one-line baseline, and only a proper unknown-word model fixed it. Hidden states, transition scores and dynamic programming come back again in speech recognition and machine translation, my next two projects. To experiment yourself, the <a href="https://www.nltk.org/book/ch05.html" target="_blank" rel="noopener">NLTK book chapter on tagging</a> is a great start.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+A Hidden Markov Model is trained by counting and decoded with the Viterbi algorithm, and it can still tell "count the votes" from "the count was wrong". The most important lesson, though, was not the algorithm but the evaluation: textbook smoothing made the model worse than a one-line baseline, and only a proper unknown-word model fixed it. The same ideas — hidden states, transition scores and dynamic programming — appear again in speech recognition and machine translation, which I will cover in the next articles. If you want to experiment yourself, the <a href="https://www.nltk.org/book/ch05.html" target="_blank" rel="noopener">NLTK book chapter on tagging</a> is a great place to start.

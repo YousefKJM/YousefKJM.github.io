@@ -1,18 +1,22 @@
 ---
 title: "Agentic AI: From Chatbot to Coworker — A Hands-on Starter Guide"
-excerpt: "A chatbot answers. An agent gets it done. What's really inside an AI agent — the loop, tools, memory, MCP — and a working one in about 60 lines of Python, guardrails included."
+excerpt: "In this article I would like to explain what makes an AI system \"agentic\", how an agent actually works under the hood — the loop, tools, memory and MCP — and walk you step by step through building your first agent in about 60 lines of Python, plus the patterns and guardrails you need before you give it real work."
 header:
   image: /images/posts/agentic-ai/hero.jpg
 ---
 
-![Agentic AI: the goal, think, act, observe loop around an LLM](/images/posts/agentic-ai/hero.jpg)
+<p align="center">
+<img src="/images/posts/agentic-ai/hero.jpg" alt="Agentic AI: the goal, think, act, observe loop around an LLM" style="margin-inline:auto;"/>
+</p>
 
-Most of my posts are about security. This one is a Friday break, on the topic everyone's talking about: <strong>agentic AI</strong>. A chatbot answers your question. An agent takes your <em>goal</em>, makes a plan, uses tools, checks the results and keeps going until the job is done. That's the gap between "here's how to rename your files" and "I renamed your files — here's what changed".
+<h3><strong>Short introduction</strong></h3>
+Most of my recent posts are about security. This one is a Friday break, about the topic everyone is talking about: <strong>agentic AI</strong>. A chatbot answers your question. An agent takes your <em>goal</em>, makes a plan, uses tools, checks the results and keeps going until the job is done. That one difference changes what AI can do for you. It is the gap between "here is how to rename your files" and "I renamed your files, here is what changed".
 
-The good news: under all the hype, an agent is just <strong>a loop around a language model that can call functions</strong>. Once you see the loop, everything else — tools, memory, MCP, multi-agent patterns and the guardrails that separate a demo from something you can trust — falls into place. So let's open the box and build one.
+The good news is that agents are much simpler than they sound. Under all the hype, an agent is <strong>a loop around a language model that can call functions</strong>. In this article I would like to open that box: what makes a system agentic, the building blocks of every agent, and how to build a working agent from scratch. Then we will cover MCP, multi-agent patterns, and the guardrails that separate a fun demo from something you can trust.
 
-## Chatbot, workflow or agent?
-"Agent" is used for everything these days, so first, some vocabulary. The useful question is <strong>who decides the next step</strong>, your code or the model:
+&nbsp;
+<h3><strong>Chatbot, workflow or agent?</strong></h3>
+"Agent" is used for everything these days, so lets first agree on the vocabulary. The useful question is <strong>who decides the next step</strong>, your code or the model:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 250" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Autonomy spectrum from left to right: chatbot, where the model only answers; workflow, where code decides the steps; agent, where the model decides the steps; multi-agent, where agents delegate to agents. Autonomy, power and risk all grow to the right">
@@ -58,7 +62,8 @@ The good news: under all the hype, an agent is just <strong>a loop around a lang
 
 The rule I follow: <strong>use the lowest level that solves the problem</strong>. If you can write the steps down in advance, build a workflow. Choose an agent when the path depends on what the model finds along the way, like debugging, research, or cleaning up a messy folder.
 
-## Anatomy of an agent
+&nbsp;
+<h3><strong>Anatomy of an agent</strong></h3>
 Every agent, from a 60-line script to a coding assistant, is made of the same five parts:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -99,10 +104,11 @@ Every agent, from a 60-line script to a coding assistant, is made of the same fi
 | **Loop** | Your code that runs the requested tools and sends the results back | A `for` loop with a step limit |
 | **Guardrails** | Everything that limits damage | Folder jail, approval prompt, `max_steps` |
 
-> **Key insight:** The model never runs anything itself. It only <em>asks</em> for a tool call, with arguments, and <strong>your code</strong> decides whether to run it. That is the most important thing to understand about agents, and it is where all your control lives.
+> **_NOTE:_**  The model never runs anything itself. It only <em>asks</em> for a tool call, with arguments, and <strong>your code</strong> decides whether to run it. That is the most important thing to understand about agents, and it is where all your control lives.
 
-## The agent loop, step by step
-Here's what actually travels between your code and the model. On every turn your code sends the whole conversation, the model replies, and the reply's `stop_reason` tells you what to do next:
+&nbsp;
+<h3><strong>The agent loop, step by step</strong></h3>
+In this section we will look at what actually travels between your code and the model. On every turn your code sends the whole conversation, the model replies, and the reply's `stop_reason` tells you what to do next:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 330" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Sequence: your code sends goal and tool definitions to the model; the model replies with a tool_use request; your code runs the function and sends back a tool_result; this repeats until the model replies with stop_reason end_turn and a final answer">
@@ -131,9 +137,10 @@ Here's what actually travels between your code and the model. On every turn your
 </svg>
 </div>
 
-That's the whole trick. Time to build one.
+That is the whole trick. Lets build it.
 
-## Build your first agent: a Downloads tidy-up assistant
+&nbsp;
+<h3><strong>Build your first agent: a Downloads tidy-up assistant</strong></h3>
 Everyone's Downloads folder is a mess, so it makes a good first task. It is open-ended (the agent has to look before it decides), easy to check, and a little bit dangerous, which is perfect for learning guardrails. We will give the agent two tools, one to look and one to act, and ask for approval before every move.
 
 <strong>Step 1 — Install the SDK and set your API key</strong>
@@ -233,11 +240,11 @@ if __name__ == "__main__":
 
 <strong>Step 5 — Run it</strong>
 
-Run `python tidy_agent.py` and you'll get something like this. Here I approved the invoice and the photo, and declined the installer:
+Once you run `python tidy_agent.py` you should see something like this. Here I approved the invoice and the photo, and declined the installer:
 
-![Terminal output of the tidy-up agent: list_files, three move_file requests with approval prompts, and a final summary](/images/posts/agentic-ai/agent-run.png)
+<img src="/images/posts/agentic-ai/agent-run.png" alt="Terminal output of the tidy-up agent: list_files, three move_file requests with approval prompts, and a final summary" style="margin-inline:auto;" />
 
-Look at what the agent did:
+As you can see, the agent:
 
 1. **Looked before acting.** Its first move was `list_files`, not a guess.
 2. **Batched its actions.** It asked for three moves in one turn. These are called <em>parallel tool calls</em>, and all their results go back together in one message.
@@ -246,9 +253,10 @@ Look at what the agent did:
 
 None of that behaviour is in our loop. The loop only runs tools. The planning, the checking and the adapting come from the model. That is what "agentic" means in practice.
 
-> **Expect variety:** The wording of the agent's messages will be different on every run, because the model decides the steps. That is expected. What should <em>not</em> change are the guardrails: the folder jail and the approval prompt are in your code, so they hold no matter what the model decides.
+> **_NOTE:_**  The wording of the agent's messages will be different on every run, because the model decides the steps. That is expected. What should <em>not</em> change are the guardrails: the folder jail and the approval prompt are in your code, so they hold no matter what the model decides.
 
-## The same agent with less code: the Tool Runner
+&nbsp;
+<h3><strong>The same agent with less code: the Tool Runner</strong></h3>
 Writing the loop yourself once is the best way to understand it. For real projects, the SDK can run the loop for you. With `@beta_tool`, the JSON schema is generated from the type hints and docstring, so steps 3 and 4 disappear:
 
 ```python
@@ -289,7 +297,8 @@ for message in runner:                      # one item per model turn
             print("🔧", block.name, block.input)
 ```
 
-## Giving agents superpowers with MCP
+&nbsp;
+<h3><strong>Giving agents superpowers with MCP</strong></h3>
 Writing tools for every project gets old quickly. The <strong>Model Context Protocol (MCP)</strong> is an open standard, introduced by Anthropic in late 2024 and now supported across most AI apps, IDEs and agent frameworks. It lets you wrap a capability <em>once</em> as an "MCP server" and plug it into any MCP-compatible agent. Think of it as USB-C for AI tools:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -326,7 +335,7 @@ Writing tools for every project gets old quickly. The <strong>Model Context Prot
 </svg>
 </div>
 
-Here's a small MCP server that lets any agent search your Markdown notes. This is the complete file:
+Lets write a small MCP server that lets any agent search your Markdown notes. This is the complete file:
 
 ```python
 # notes_server.py   (pip install mcp)
@@ -358,11 +367,12 @@ claude mcp add notes -- python /path/to/notes_server.py
 
 From now on you can just ask "what did I write about agents last month?", and the agent will decide to call `search_notes` and `read_note` by itself.
 
-> **Version gotcha:** This snippet uses version 2 of the official Python `mcp` package, where the server class is `MCPServer`. Many tutorials online still show the version 1 name, `from mcp.server.fastmcp import FastMCP`. The decorators work the same way, but the import is different.
+> **_NOTE:_**  This snippet uses version 2 of the official Python `mcp` package, where the server class is `MCPServer`. Many tutorials online still show the version 1 name, `from mcp.server.fastmcp import FastMCP`. The decorators work the same way, but the import is different.
 
-> **Security note:** An MCP server is code that runs with <strong>your</strong> permissions, and its tool descriptions go straight into the model's context. Install servers only from sources you trust, the same way you would treat a browser extension.
+> **_NOTE:_**  An MCP server is code that runs with <strong>your</strong> permissions, and its tool descriptions go straight into the model's context. Install servers only from sources you trust, the same way you would treat a browser extension.
 
-## Memory: how agents remember
+&nbsp;
+<h3><strong>Memory: how agents remember</strong></h3>
 Models are stateless, so "memory" is always something your system provides:
 
 | Type | How it works | Use it for | Watch out for |
@@ -374,7 +384,8 @@ Models are stateless, so "memory" is always something your system provides:
 
 A simple trick that works well: give long-running agents a `PROGRESS.md` file. Ask them to update it after each milestone and read it at the start of every session. It is cheap, easy to inspect, and you can edit it yourself.
 
-## Five patterns worth knowing
+&nbsp;
+<h3><strong>Five patterns worth knowing</strong></h3>
 Before you reach for a full agent, check if one of these simpler patterns fits. They come from Anthropic's excellent guide <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>, and most "agentic" products in production are a mix of them:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -448,7 +459,8 @@ Before you reach for a full agent, check if one of these simpler patterns fits. 
 </svg>
 </div>
 
-## Choosing your tools
+&nbsp;
+<h3><strong>Choosing your tools</strong></h3>
 The ecosystem moves fast, but the options fall into a few clear groups. Here is how I would choose in 2026:
 
 | You want to… | Reach for | Notes |
@@ -461,9 +473,10 @@ The ecosystem moves fast, but the options fall into a few clear groups. Here is 
 | Not run any infrastructure | **Managed / hosted agents** from the model providers | The provider runs the loop and the sandbox for you |
 | Use agents without writing code | **Claude Code, Cursor, GitHub Copilot agent mode, Claude Cowork** | The fastest way to build intuition for what agents are good at |
 
-> **Opinion:** Frameworks are a convenience, not a requirement. If you can't explain what the framework sends to the model on each step, start with the raw loop first. It makes debugging much easier later.
+> **_NOTE:_**  Frameworks are a convenience, not a requirement. If you can't explain what the framework sends to the model on each step, start with the raw loop first. It makes debugging much easier later.
 
-## Guardrails: before you give an agent real work
+&nbsp;
+<h3><strong>Guardrails: before you give an agent real work</strong></h3>
 An agent is a program that writes its own next line of code at runtime, so treat it that way. This is my checklist:
 
 1. **Least privilege tools.** Give it `read_file`, not `run_shell`, unless it truly needs a shell. Each tool should do <em>one</em> thing with clear limits, like the folder jail in our example.
@@ -475,7 +488,9 @@ An agent is a program that writes its own next line of code at runtime, so treat
 7. **Sandbox code execution.** If the agent runs code, run it in a container or VM with no secrets and limited network access, never on your laptop's main profile.
 8. **Measure it.** Build a small set of test tasks with known good outcomes, and re-run them whenever you change the prompt, the tools or the model.
 
-## Common mistakes I see
+&nbsp;
+<h3><strong>Common mistakes I see</strong></h3>
+
 | Mistake | Better |
 |---|---|
 | Building an agent when a single prompt would do | Start at the lowest level of the spectrum and move up only when needed |
@@ -485,7 +500,8 @@ An agent is a program that writes its own next line of code at runtime, so treat
 | Judging the agent by one lucky demo | Run 10–20 real tasks, read the traces, and fix the patterns you see |
 | Throwing away failed traces | Failures are the best way to find unclear tool descriptions and missing tools |
 
-## Your 7-day getting-started plan
+&nbsp;
+<h3><strong>Your 7-day getting-started plan</strong></h3>
 If you want to go from zero to comfortable in a week, this is the path I recommend:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -512,8 +528,8 @@ If you want to go from zero to comfortable in a week, this is the path I recomme
 
 Some ideas for that first real chore: sorting your receipts into a spreadsheet, a "morning brief" agent that reads your calendar and unread emails and writes a five-line summary, a travel planner that checks weather and opening hours before building the itinerary, or an agent that keeps a project's README in sync with its code.
 
-## Start small, then let it earn trust
+&nbsp;
+<h3><strong>Summary</strong></h3>
+An agent is a loop: the model looks at the goal and the history, asks for a tool, your code runs it and returns the result, and the cycle repeats until the job is done. Everything else is about making that loop useful and safe. That means clear tools, memory that fits the task, MCP to plug in new capabilities, the simplest pattern that works, and guardrails enforced in code rather than in the prompt. Start small, read the traces, and give the agent more freedom only as it earns your trust.
 
-An agent is a loop: the model reads the goal and the history, asks for a tool, your code runs it and returns the result, and the cycle repeats until the job is done. Everything else is about making that loop useful and safe — clear tools, memory that fits the task, MCP to plug in new capabilities, the simplest pattern that works, and guardrails enforced in code rather than in the prompt. Start small, read the traces, and widen the agent's freedom only as it earns your trust.
-
-Worth reading next: Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>, the <a href="https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview" target="_blank" rel="noopener">tool use documentation</a>, and the <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a> site.
+You can read more in Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>, the official <a href="https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview" target="_blank" rel="noopener">tool use documentation</a>, and the <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol documentation</a>.

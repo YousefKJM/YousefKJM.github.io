@@ -1,6 +1,6 @@
 ---
 title: "Software Engineering Practices That Survive a Real Team"
-excerpt: "Six people, one repository, one semester. The handful of engineering habits that kept our senior project shippable — from requirements you can test to a definition of done nobody can argue with."
+excerpt: "In this article I would like to share the software engineering practices that actually helped when six of us shared one codebase — testable requirements, a clean architecture, a simple Git workflow, the testing pyramid, code review and a definition of done."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -27,12 +27,12 @@ excerpt: "Six people, one repository, one semester. The handful of engineering h
 </svg>
 </div>
 
-Software Engineering at KFUPM gave me plenty of theory. Our senior project, InfoMagnet, gave me the reality check. It was a location-aware media platform built by six of us: a Sails.js dashboard, native iOS and Android apps, and a MongoDB/Firebase backend. With six people pushing to the same repository every day, you find out very quickly which practices earn their place and which ones only look good in a slide.
+<h3><strong>Short introduction</strong></h3>
+I studied Software Engineering at KFUPM, and a lot of what we learned stayed in the textbook. The part that did not stay there came from our senior project, InfoMagnet — a location-aware media platform built by a team of six, with a Sails.js dashboard, native iOS and Android apps and a MongoDB/Firebase backend. When six people push to the same repository every day, you quickly find out which practices are useful and which ones are just theory. In this article I would like to share the ones that worked for us, step by step, from the first requirement to the moment a feature is really "done".
 
-What follows is the short list that survived, in the order a feature actually travels: from the first requirement to the moment we could honestly call it "done".
-
-## Requirements: if you can't test it, it isn't one
-Requirements come first, because everything else depends on them. The most common problem is a requirement that sounds good but cannot be tested:
+&nbsp;
+<h3><strong>Requirements: if you can't test it, it isn't one</strong></h3>
+Lets start from requirements, because everything else depends on them. The most common problem is a requirement that sounds good but cannot be tested:
 
 | ❌ Vague | ✅ Testable |
 |---|---|
@@ -52,15 +52,17 @@ When I upload a video under 100 MB
 Then it appears on the map at my position within 10 seconds
 ```
 
-Notice that the "Given / When / Then" lines are already test cases. You don't have to invent tests later — they are written together with the requirement.
+As you can see, the "Given / When / Then" lines are already test cases. You don't have to invent tests later — they are written together with the requirement.
 
-## Design: draw the boxes before writing the code
+&nbsp;
+<h3><strong>Design: draw the boxes before writing the code</strong></h3>
 The diagram at the top of this article is the one rule of architecture I always follow: <strong>layers, and dependencies only point one way</strong>. The presentation layer calls the service layer, the service layer calls the data layer, and never the other way around.
 
 Why does it matter? Because business logic that doesn't import UI or database code can be tested without either of them. It is also what allowed our team to build the web dashboard and both mobile apps against one shared API, without copying business rules into three places.
 
-## Git workflow that doesn't fight you
-Here is the simplest workflow I know that still keeps `main` safe. One branch per story, small commits, and a pull request at the end:
+&nbsp;
+<h3><strong>Git workflow that doesn't fight you</strong></h3>
+In this section we will set up the simplest workflow that still keeps `main` safe. One branch per story, small commits, and a pull request at the end:
 
 ```bash
 git switch -c feature/geo-feed main          # one branch per story
@@ -79,9 +81,10 @@ These are the rules we agreed on:
 | Conventional commits (`feat:`, `fix:`, `docs:`) | Readable history and automatic changelogs |
 | Never commit secrets | Add `.env` to `.gitignore` on day one — Git history is forever |
 
-> **Tip:** If you are using Azure DevOps, you can enforce some of these rules with branch policies, like a minimum number of reviewers before a pull request can be completed. I showed how to set this up in my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/).
+> **_NOTE:_**  If you are using Azure DevOps, you can enforce some of these rules with branch policies, like a minimum number of reviewers before a pull request can be completed. I showed how to set this up in my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/).
 
-## The testing pyramid
+&nbsp;
+<h3><strong>The testing pyramid</strong></h3>
 Once code is merged often, tests are the only thing protecting `main`. The question is which tests to write. This is the shape that works:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -111,7 +114,8 @@ def test_nearby_content_excludes_items_beyond_radius():
     assert [i.name for i in nearby(items, user, radius_m=500)] == ["near"]
 ```
 
-## Code review: rules for both sides
+&nbsp;
+<h3><strong>Code review: rules for both sides</strong></h3>
 Code review is where a team either learns together or argues together. These rules helped us stay on the first side.
 
 <strong>For the author:</strong>
@@ -126,7 +130,8 @@ Code review is where a team either learns together or argues together. These rul
 2. Ask questions instead of giving orders: "What happens if `location` is null here?"
 3. Approve when the change makes `main` better, not when it is perfect.
 
-## Definition of done
+&nbsp;
+<h3><strong>Definition of done</strong></h3>
 The last step is agreeing on what "done" means. A story is not done when the code compiles. For us it was done when:
 
 - [ ] Acceptance criteria pass
@@ -138,6 +143,6 @@ The last step is agreeing on what "done" means. A story is not done when the cod
 
 Agree on this list in the first week. Most of the "it's done, but…" discussions in a team are really disagreements about this list.
 
-## The habits that stuck
-
-None of these practices is complicated: requirements you can test, dependencies that point one way, short-lived branches, a test suite shaped like a pyramid, small pull requests and a written definition of done. The power comes from doing all of them, every time, as a team. If you want to go further, the <a href="https://www.conventionalcommits.org/" target="_blank" rel="noopener">Conventional Commits</a> specification and Martin Fowler's <a href="https://martinfowler.com/articles/practical-test-pyramid.html" target="_blank" rel="noopener">practical test pyramid</a> are where I would continue.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+None of these practices is complicated: testable requirements, one-way dependencies, short branches, a pyramid-shaped test suite, small pull requests and a written definition of done. What makes them powerful is doing all of them, every time, as a team. If you want to read more, the <a href="https://www.conventionalcommits.org/" target="_blank" rel="noopener">Conventional Commits</a> specification and Martin Fowler's article on the <a href="https://martinfowler.com/articles/practical-test-pyramid.html" target="_blank" rel="noopener">practical test pyramid</a> are both great places to continue.

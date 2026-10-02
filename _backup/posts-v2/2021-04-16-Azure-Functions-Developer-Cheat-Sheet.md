@@ -1,6 +1,6 @@
 ---
 title: "Getting Started with Azure Functions: Triggers, Bindings and Deployment"
-excerpt: "Not every job needs a web app. Resize an image, drain a queue, run a nightly cleanup — Azure Functions with triggers and bindings, from local project to deployed function."
+excerpt: "In this article I would like to present how to build a serverless function on Azure — choosing a hosting plan, creating and running a function locally, using triggers and bindings, and deploying it to Azure."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -26,11 +26,11 @@ excerpt: "Not every job needs a web app. Resize an image, drain a queue, run a n
 </svg>
 </div>
 
-After hosting a full web app on [App Service](/Azure-App-Service-Hosting-Guide/), I kept running into small jobs that didn't deserve one: resize an image when it lands in storage, process a message from a queue, clean up old records every night.
+<h3><strong>Short introduction</strong></h3>
+In the [previous article](/Azure-App-Service-Hosting-Guide/) we hosted a full web application on App Service. But many tasks don't need a whole web app: resizing an image when it is uploaded, processing a message from a queue, or running a cleanup job every night. For these, <strong>Azure Functions</strong> is a better fit. You write only the code for the task, and Azure runs it when something happens. In this article I would like to present how to create, run and deploy an Azure Function, and explain the two ideas that make it so productive: <strong>triggers and bindings</strong>.
 
-That is what <strong>Azure Functions</strong> is for. You write the code for the task; Azure runs it when something happens. Two ideas make it so productive — <strong>triggers and bindings</strong> — and both show up in the walkthrough below, from a local project to a deployed function.
-
-## Triggers and bindings
+&nbsp;
+<h3><strong>Triggers and bindings</strong></h3>
 The diagram at the top of this article shows how a function is built:
 
 - A **trigger** starts the function. Every function has exactly one — an HTTP request, a timer, a new queue message, a new blob, and so on.
@@ -39,8 +39,9 @@ The diagram at the top of this article shows how a function is built:
 
 The nice part is that bindings replace a lot of SDK code. You don't open connections or write retry loops — you declare the binding and use it like a normal variable.
 
-## Choose the hosting plan first
-Before writing code, decide where the function will run, because it affects how long the function can run and how fast it starts:
+&nbsp;
+<h3><strong>Choose the hosting plan first</strong></h3>
+Before writing code, lets choose where the function will run, because it affects how long the function can run and how fast it starts:
 
 | Plan | Scaling | Cold start | Max run time | Use it when |
 |---|---|---|---|---|
@@ -48,10 +49,11 @@ Before writing code, decide where the function will run, because it affects how 
 | **Premium** | Pre-warmed instances | No | Unlimited | Latency matters, you need VNet access |
 | **Dedicated (App Service)** | Manual or autoscale | No | Unlimited | You already pay for an App Service plan |
 
-> **Watch the clock:** The Consumption plan is cheap until a function needs more than the time limit. Long-running work should be split into smaller steps using a queue, or use <strong>Durable Functions</strong> — not one big function.
+> **_NOTE:_**  The Consumption plan is cheap until a function needs more than the time limit. Long-running work should be split into smaller steps using a queue, or use <strong>Durable Functions</strong> — not one big function.
 
-## Create and run a function locally
-Everything starts on your own machine. Install the Azure Functions Core Tools and create a new project:
+&nbsp;
+<h3><strong>Create and run a function locally</strong></h3>
+In this section we will create a function on our machine first. Install the Azure Functions Core Tools and create a new project:
 
 ```bash
 npm install -g azure-functions-core-tools@3 --unsafe-perm true
@@ -64,8 +66,9 @@ func start                            # runs locally on http://localhost:7071
 
 The project contains a file called `local.settings.json` with your local settings and connection strings. It is already in `.gitignore`, and it should stay there.
 
-## An HTTP trigger with a queue output binding
-Now something useful: an HTTP endpoint that receives an order and puts it in a queue for background processing. First we declare the bindings in `HttpHello/function.json`:
+&nbsp;
+<h3><strong>An HTTP trigger with a queue output binding</strong></h3>
+Now lets build something useful: an HTTP endpoint that receives an order and puts it in a queue for background processing. First we declare the bindings in `HttpHello/function.json`:
 
 ```json
 {
@@ -93,9 +96,11 @@ def main(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
     return func.HttpResponse(f"queued {order['id']}", status_code=202)
 ```
 
-Notice there is no storage SDK, no connection handling and no retry logic in the code. The output binding takes care of all of it.
+As you can see, there is no storage SDK, no connection handling and no retry logic in the code. The output binding takes care of all of it.
 
-## Triggers you will use most
+&nbsp;
+<h3><strong>Triggers you will use most</strong></h3>
+
 | Trigger | Runs when | Typical use |
 |---|---|---|
 | HTTP | A request arrives | Webhooks, small APIs |
@@ -105,7 +110,8 @@ Notice there is no storage SDK, no connection handling and no retry logic in the
 | Event Grid | An Azure event happens | Reacting to resource changes |
 | Cosmos DB | The change feed has new items | Syncing data, materialized views |
 
-## Deploy to Azure
+&nbsp;
+<h3><strong>Deploy to Azure</strong></h3>
 Once the function works locally, we create the Function App in Azure and publish:
 
 ```bash
@@ -118,13 +124,15 @@ func azure functionapp publish <function-app-name>
 
 After publishing, the output shows the URL of the function, including the function key.
 
-## Security: choose the right auth level
+&nbsp;
+<h3><strong>Security: choose the right auth level</strong></h3>
+
 1. `anonymous` — anyone can call it. Use it only for public webhooks that you validate yourself.
 2. `function` — the caller needs the function key (`?code=...` or the `x-functions-key` header). This is the sensible default.
 3. `admin` — needs the master key. Never share it.
 
-> **Security note:** Function keys are shared secrets, not user identity. If you need real user authentication, put App Service Authentication or API Management in front of the function.
+> **_NOTE:_**  Function keys are shared secrets, not user identity. If you need real user authentication, put App Service Authentication or API Management in front of the function.
 
-## Keep it small
-
-Functions let you focus on the small piece of logic in the middle: triggers start your code, bindings move data in and out. Pick the hosting plan deliberately, keep functions small and idempotent (a queue message can arrive more than once), watch the poison queue, and switch on Application Insights from day one. More in the official <a href="https://docs.microsoft.com/en-us/azure/azure-functions/" target="_blank" rel="noopener">Azure Functions documentation</a>.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Azure Functions lets you focus on the small piece of logic in the middle, while triggers start your code and bindings move the data in and out. Choose the hosting plan carefully, keep functions small and idempotent (a queue message can be delivered more than once), watch the poison queue for failed messages, and turn on Application Insights from the beginning. You can read more in the official <a href="https://docs.microsoft.com/en-us/azure/azure-functions/" target="_blank" rel="noopener">Azure Functions documentation</a>.

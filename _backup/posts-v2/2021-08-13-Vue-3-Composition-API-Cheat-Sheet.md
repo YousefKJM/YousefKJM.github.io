@@ -1,6 +1,6 @@
 ---
 title: "Getting Started with the Vue 3 Composition API"
-excerpt: "A live-filtered project list in under 50 lines — the Vue 3 Composition API and <script setup>, built piece by piece, with each part mapped back to the Options API you already know."
+excerpt: "In this article I would like to present the Vue 3 Composition API by building a small working component step by step — reactivity, props and events, composables, and how each piece maps to the Options API you may already know."
 header:
   image: /images/posts/vue-3/project-list.png
 ---
@@ -9,12 +9,12 @@ header:
 <img src="/images/posts/vue-3/project-list.png" alt="A small Vue 3 app listing projects" width="640" style="margin-inline:auto;"/>
 </p>
 
-My portfolio site runs on Vue.js, and Vue is the frontend framework I reach for most in my web work. Vue 3 — and especially <code>&lt;script setup&gt;</code>, which became stable in Vue 3.2 this month — changed how I write components.
+<h3><strong>Short introduction</strong></h3>
+My personal portfolio website is built with Vue.js, and Vue is the frontend framework I use the most in my web development work. With Vue 3 — and especially the <code>&lt;script setup&gt;</code> syntax that became stable in Vue 3.2 this month — the <strong>Composition API</strong> changed the way I write components. In this article I would like to present it by building the small app in the picture above: a list of my projects with a live filter, where clicking a project tells the parent component which one was selected. Along the way, I will show how each part maps to the Options API.
 
-The best way to show it is to build something. The small app in the picture above lists my projects with a live filter, and clicking one tells the parent which project was selected. Each piece maps back to the Options API, so nothing feels like magic.
-
-## Create the project
-Create a new Vue 3 project with Vite:
+&nbsp;
+<h3><strong>Create the project</strong></h3>
+Lets start by creating a new Vue 3 project with Vite:
 
 ```bash
 npm create vite@latest vue-demo -- --template vue
@@ -33,7 +33,8 @@ For the data I used a simple JSON file in `public/api/items.json`, so we can foc
 ]
 ```
 
-## How data flows between components
+&nbsp;
+<h3><strong>How data flows between components</strong></h3>
 Before writing the component, it helps to understand the rule that every Vue app follows:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -59,7 +60,8 @@ Before writing the component, it helps to understand the rule that every Vue app
 
 <strong>Props go down, events go up, and shared state lives on the side.</strong> If you find yourself passing a prop through three components that don't use it, it belongs in a store or a composable.
 
-## Reactivity: ref and reactive
+&nbsp;
+<h3><strong>Reactivity: ref and reactive</strong></h3>
 Everything in the Composition API starts with reactive values:
 
 ```js
@@ -79,8 +81,9 @@ watch(count, (now, before) => console.log(before, '→', now))
 | `computed()` | Values derived from other values. No side effects inside |
 | `watch()` | Side effects when something changes (API calls, localStorage) |
 
-## A composable for fetching data
-Time for the first <strong>composable</strong> — a plain function that contains reactive logic and can be reused by any component. This is the main reason to use the Composition API: it replaces mixins without their name collisions. Create `src/composables/useFetch.js`:
+&nbsp;
+<h3><strong>A composable for fetching data</strong></h3>
+In this section we will write our first <strong>composable</strong> — a plain function that contains reactive logic and can be reused by any component. This is the main reason to use the Composition API: it replaces mixins without their name collisions. Create `src/composables/useFetch.js`:
 
 ```js
 import { ref } from 'vue'
@@ -96,7 +99,8 @@ export function useFetch(url) {
 }
 ```
 
-## The component
+&nbsp;
+<h3><strong>The component</strong></h3>
 Now the component itself, `src/components/ProjectList.vue`. It receives a `title` prop, loads the data with our composable, filters it with a computed value, and emits a `selected` event when an item is clicked:
 
 {% raw %}
@@ -153,7 +157,8 @@ Once you save, the app shows the full list as in the first screenshot. Type "rec
 
 <img src="/images/posts/vue-3/filter-and-emit.png" alt="Filtered list with the selected project" width="640" style="margin-inline:auto;" />
 
-## Options API → Composition API
+&nbsp;
+<h3><strong>Options API → Composition API</strong></h3>
 If you already know Vue 2, this table maps what you know to the new syntax:
 
 | Options API | Composition API |
@@ -166,8 +171,8 @@ If you already know Vue 2, this table maps what you know to the new syntax:
 | `this.$emit('e')` | `const emit = defineEmits(['e']); emit('e')` |
 | `props: ['title']` | `const props = defineProps(['title'])` |
 
-> **Common mistakes:** Five common mistakes: destructuring a `reactive()` object (use `toRefs`), using the array index as `:key`, changing a prop inside the child (emit an event instead), putting `v-if` and `v-for` on the same element, and forgetting `.value` in the script — templates unwrap refs automatically, JavaScript doesn't.
+> **_NOTE:_**  Five common mistakes: destructuring a `reactive()` object (use `toRefs`), using the array index as `:key`, changing a prop inside the child (emit an event instead), putting `v-if` and `v-for` on the same element, and forgetting `.value` in the script — templates unwrap refs automatically, JavaScript doesn't.
 
-## Organized by what it does
-
-The Composition API organizes a component by what it does instead of by option type: reactive values with `ref` and `reactive`, derived values with `computed`, communication through props and events, and reusable logic in composables. The app above uses all of them in under 50 lines. The official <a href="https://v3.vuejs.org/guide/composition-api-introduction.html" target="_blank" rel="noopener">Vue 3 documentation</a> goes deeper.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+The Composition API organizes a component by what it does instead of by option type: reactive values with `ref` and `reactive`, derived values with `computed`, communication with props and events, and reusable logic in composables. The small app in this article uses all of them in less than 50 lines. You can read more in the official <a href="https://v3.vuejs.org/guide/composition-api-introduction.html" target="_blank" rel="noopener">Vue 3 documentation</a>.

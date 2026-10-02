@@ -1,6 +1,6 @@
 ---
 title: "React Native vs Flutter vs Ionic: How to Choose a Mobile Framework"
-excerpt: "Forget the language debate. Ionic, React Native and Flutter differ in how they put a button on the screen — and once you see that, the choice gets easy. Notes from shipping both Ionic and native apps."
+excerpt: "In this article I would like to compare the three most popular cross-platform mobile frameworks — Ionic, React Native and Flutter — by looking at how each one actually draws the screen, and share how to start a project in each, based on my experience with both Ionic and native mobile development."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -45,11 +45,11 @@ excerpt: "Forget the language debate. Ionic, React Native and Flutter differ in 
 </svg>
 </div>
 
-I've built mobile apps two ways. At Saudi Aramco's Innovation Center, an IoT access-control app was built with <strong>Ionic, Angular and Cordova</strong> and talked to hardware over Bluetooth Low Energy. For InfoMagnet, my senior project, we wrote <strong>native apps in Swift and Java</strong>.
+<h3><strong>Short introduction</strong></h3>
+I have built mobile apps in two different ways. For an IoT access control system at Saudi Aramco's Innovation Center, the mobile app was built with <strong>Ionic, Angular and Cordova</strong> and talked to the hardware over Bluetooth Low Energy. For InfoMagnet, my senior project, we built <strong>native apps in Swift and Java</strong> for iOS and Android. Choosing the wrong approach can cost months, and comparisons usually focus on the language. In this article I would like to compare Ionic, React Native and Flutter from a different angle: <strong>how each one gets a button onto the screen</strong>. Once you see that, the choice becomes much easier.
 
-Picking the wrong approach can cost months, yet most comparisons argue about languages. The more useful question is <strong>how each framework gets a button onto the screen</strong> — that single difference explains almost every trade-off.
-
-## Three ways to draw the screen
+&nbsp;
+<h3><strong>Three ways to draw the screen</strong></h3>
 The diagram at the top of this article shows the three approaches:
 
 1. **Ionic** — your app is a web app (Angular, React or Vue) running inside a <strong>WebView</strong>, a browser engine embedded in the app. Plugins (Capacitor or Cordova) give access to native features like Bluetooth or the camera.
@@ -58,7 +58,9 @@ The diagram at the top of this article shows the three approaches:
 
 Each approach has its own limit: for Ionic it is the WebView, for React Native the traffic over the bridge, and for Flutter the cost of learning Dart and a bigger app size.
 
-## Comparison
+&nbsp;
+<h3><strong>Comparison</strong></h3>
+
 | Question | Ionic | React Native | Flutter | Native |
 |---|---|---|---|---|
 | The team already knows web development? | ✅ best fit | ✅ if they know React | ❌ need to learn Dart | ❌ |
@@ -68,10 +70,11 @@ Each approach has its own limit: for Ionic it is the WebView, for React Native t
 | Deep hardware access (BLE, sensors) | ✅ via plugins | ✅ via native modules | ✅ via platform channels | ✅ best fit |
 | Newest OS features on day one | ❌ wait for a plugin | ❌ wait for a module | ❌ wait for a plugin | ✅ |
 
-> **Field note:** From the Bluetooth project: the cross-platform UI was never the problem. Every difficult issue ended up in the plugin layer that talks to the hardware. If the core of your app <em>is</em> the hardware, plan time for native code whichever framework you choose.
+> **_NOTE:_**  From the Bluetooth project: the cross-platform UI was never the problem. Every difficult issue ended up in the plugin layer that talks to the hardware. If the core of your app <em>is</em> the hardware, plan time for native code whichever framework you choose.
 
-## Create a project in each framework
-All three get you to a running app in about a minute:
+&nbsp;
+<h3><strong>Create a project in each framework</strong></h3>
+Lets see how to start with each one. All three get you to a running app in a minute:
 
 ```bash
 # Ionic (Angular flavour, Capacitor runtime)
@@ -90,7 +93,8 @@ cd my_app && flutter run                     # press 'r' for hot reload
 flutter doctor                               # if anything doesn't work, start here
 ```
 
-## The same screen in all three
+&nbsp;
+<h3><strong>The same screen in all three</strong></h3>
 To see the difference in practice, here is the same list — a list of doors, where tapping one unlocks it, like in the access control app — written in each framework.
 
 <strong>Ionic (Angular template):</strong>
@@ -135,20 +139,22 @@ ListView.builder(
 
 The idea is the same, but the result is different: Ionic creates HTML elements, React Native creates native list cells, and Flutter paints the whole list itself.
 
-## Before releasing any mobile app
+&nbsp;
+<h3><strong>Before releasing any mobile app</strong></h3>
+
 1. **Virtualize long lists** (`FlatList`, `ListView.builder`, Ionic virtual scroll). Rendering 1,000 rows at once is the most common performance problem.
 2. **Ask for permissions when they are needed**, not when the app starts. Users deny requests they don't understand.
 3. **Store secrets in the Keychain / Keystore**, never in `localStorage` or `AsyncStorage` — those are plain text on the device.
 4. **Plan for offline use** — save changes locally and sync when the connection is back.
 5. **Test on a cheap Android phone.** A flagship phone hides every performance problem.
 
-## My rule of thumb
+&nbsp;
+<h3><strong>Summary</strong></h3>
+My rule of thumb after working with both cross-platform and native apps:
 
-After working on both cross-platform and native apps, this is how I decide:
-
-- A web team, an app made of forms and lists, maybe a website too → **Ionic**.
+- A web team, an app made of forms and lists, maybe also a website → **Ionic**.
 - A React team that wants a native look → **React Native**.
-- A design-heavy app that must look identical everywhere → **Flutter**.
+- A design-heavy app that must look the same on every platform → **Flutter**.
 - The app's main value is the platform itself (hardware, AR, background work) → **native**.
 
-Official docs: <a href="https://ionicframework.com/docs" target="_blank" rel="noopener">Ionic</a>, <a href="https://reactnative.dev/docs/getting-started" target="_blank" rel="noopener">React Native</a> and <a href="https://flutter.dev/docs" target="_blank" rel="noopener">Flutter</a>.
+You can read more in the official documentation of <a href="https://ionicframework.com/docs" target="_blank" rel="noopener">Ionic</a>, <a href="https://reactnative.dev/docs/getting-started" target="_blank" rel="noopener">React Native</a> and <a href="https://flutter.dev/docs" target="_blank" rel="noopener">Flutter</a>.

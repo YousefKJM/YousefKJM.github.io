@@ -1,17 +1,19 @@
 ---
 title: "Neural Machine Translation with RNNs in Keras"
-excerpt: "Five RNN architectures, one English-to-French dataset, real validation numbers. The surprise: the simplest upgrade — an embedding layer — beat the fancy encoder-decoder."
+excerpt: "In this article I would like to present the English-to-French translator I built with recurrent neural networks in Keras — comparing a simple RNN, embeddings, a bidirectional RNN, an encoder-decoder and a combined model, with the real validation results and why the simplest upgrade won."
 header:
   image: /images/posts/machine-translation/rnn.png
 ---
 
-![Recurrent neural network for translation](/images/posts/machine-translation/rnn.png)
+<p align="center">
+<img src="/images/posts/machine-translation/rnn.png" alt="Recurrent neural network for translation" style="margin-inline:auto;"/>
+</p>
 
-[Tagging words](/HMM-Part-of-Speech-Tagging-with-Viterbi/) with counts was one thing. Translation is a much harder sequence problem: read a whole sentence in one language, write it in another, where word order changes and the lengths don't match.
+<h3><strong>Short introduction</strong></h3>
+In the [previous article](/HMM-Part-of-Speech-Tagging-with-Viterbi/) we tagged words with a statistical model built from counts. Machine translation is a much harder sequence problem: the model has to read a whole sentence in one language and write it in another, where words can change order and the number of words can be different. For an individual project, I built an <strong>English → French translator</strong> with recurrent neural networks (RNNs) in Keras, and compared five architectures on the same data. In this article I would like to walk you through the project and share the real results — which taught me more than the architecture diagrams did. The code is available on <a href="https://github.com/YousefKJM/P2-Machine-Translation" target="_blank" rel="noopener">GitHub</a>.
 
-For an individual project I built an <strong>English → French translator</strong> with recurrent neural networks in Keras and compared five architectures on the same data. The numbers taught me more than the architecture diagrams did. Code is on <a href="https://github.com/YousefKJM/P2-Machine-Translation" target="_blank" rel="noopener">GitHub</a>.
-
-## A short history of machine translation
+&nbsp;
+<h3><strong>A short history of machine translation</strong></h3>
 Before building anything, the project started by looking at how machine translation evolved:
 
 | Era | Approach | Idea | Weakness |
@@ -21,7 +23,8 @@ Before building anything, the project started by looking at how machine translat
 | — | **Example-based** | Translate by analogy with stored sentence pairs | Limited to what was seen before |
 | 2014+ | **Neural** | One network reads the whole sentence and writes the whole translation | Needs a lot of data |
 
-## The data and preprocessing
+&nbsp;
+<h3><strong>The data and preprocessing</strong></h3>
 The dataset has <strong>137,860 English–French sentence pairs</strong> with a small vocabulary, for example:
 
 ```
@@ -29,7 +32,7 @@ new jersey is sometimes quiet during autumn , and it is snowy in april .
 new jersey est parfois calme pendant l' automne , et il est neigeux en avril .
 ```
 
-Data first. Neural networks work with numbers, not words, so every pipeline needs the same three steps — turn words into ids, make all sentences the same length, and reshape the labels:
+Lets prepare the data. Neural networks work with numbers, not words, so every pipeline needs the same three steps — turn words into ids, make all sentences the same length, and reshape the labels:
 
 ```python
 from keras.preprocessing.text import Tokenizer
@@ -48,8 +51,9 @@ y, y_tk = tokenize(french);   y = pad(y)
 y = y.reshape(*y.shape, 1)    # sparse_categorical_crossentropy needs this extra dimension
 ```
 
-## The five models
-Then the models, one by one — each adds a single idea to the previous one:
+&nbsp;
+<h3><strong>The five models</strong></h3>
+In this section we will build the models one by one. Each one adds one idea to the previous one:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 310" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Five model architectures as layer stacks: simple RNN; embedding plus RNN; bidirectional RNN; encoder-decoder with a repeat vector bottleneck; final model combining embedding, bidirectional encoder, bottleneck and bidirectional decoder">
@@ -117,7 +121,8 @@ def model_final(input_shape, output_len, en_vocab, fr_vocab):
     return model
 ```
 
-## The results
+&nbsp;
+<h3><strong>The results</strong></h3>
 These are the real validation accuracies from my notebook:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -142,7 +147,7 @@ These are the real validation accuracies from my notebook:
 </svg>
 </div>
 
-The winner was <strong>not</strong> the most advanced model. Simply adding an embedding layer took the plain GRU from 81.9% to <strong>91.7%</strong> — better than every more complex architecture with the training each one got. The final model was still improving at 20 epochs (77.3% → 88.9%), so with more training it would probably pass it.
+As you can see, the winner was <strong>not</strong> the most advanced model. Simply adding an embedding layer took the plain GRU from 81.9% to <strong>91.7%</strong> — better than every more complex architecture with the training each one got. The final model was still improving at 20 epochs (77.3% → 88.9%), so with more training it would probably pass it.
 
 What do these numbers tell us?
 
@@ -151,7 +156,7 @@ What do these numbers tell us?
 3. **Compare models with the same training budget.** My models were trained for different numbers of epochs, so this ranking is "under these budgets", not a general rule.
 4. **The dataset decides a lot.** With a small vocabulary and very similar sentences, words map almost one-to-one, which is exactly what embedding + GRU is good at. On real text with long sentences and word reordering, encoder-decoder models with <strong>attention</strong> win clearly.
 
-> **Reading the output:** The model outputs a probability for every French word at every position. To read the translation, take the most likely word at each position and map the ids back to words, skipping the padding:
+> **_NOTE:_**  The model outputs a probability for every French word at every position. To read the translation, take the most likely word at each position and map the ids back to words, skipping the padding:
 
 ```python
 def logits_to_text(logits, tokenizer):
@@ -161,6 +166,6 @@ def logits_to_text(logits, tokenizer):
                     if index_to_word[i] != "<PAD>")
 ```
 
-## What the numbers taught me
-
-Five models on the same data showed that architecture diagrams don't tell the whole story: the embedding layer gave the biggest jump, the encoder-decoder needed far more training, and the dataset itself favoured the simpler model. The natural next steps are attention, beam search instead of greedy decoding, BLEU for evaluation — and finally Transformers, which dropped recurrence altogether. The notebook is on <a href="https://github.com/YousefKJM/P2-Machine-Translation" target="_blank" rel="noopener">GitHub</a>; the architecture diagrams come from Udacity's project template (MIT licence).
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Building five translation models on the same data showed that architecture diagrams don't tell the whole story: the embedding layer gave the biggest improvement, the encoder-decoder needed much more training, and the dataset itself favoured the simpler model. The natural next steps are attention, beam search instead of choosing the single best word, the BLEU score for evaluation, and finally Transformers, which removed recurrence completely. The full notebook is on <a href="https://github.com/YousefKJM/P2-Machine-Translation" target="_blank" rel="noopener">GitHub</a>; the architecture diagrams in this article come from the project template provided by Udacity (MIT licence).

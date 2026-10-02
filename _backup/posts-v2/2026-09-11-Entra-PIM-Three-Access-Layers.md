@@ -1,17 +1,21 @@
 ---
 title: "Global Admin Is Not Azure Owner: Designing Microsoft Entra PIM Across Three Access Layers"
-excerpt: "Global Administrator can't touch an Azure VM — until one toggle makes it owner of every subscription. Three access layers, the bridges between them, and a real PIM rollout with code, detections and DFIR questions."
+excerpt: "In this article I would like to explain why Global Administrator and Azure Owner live in two different permission worlds, how PIM for Groups adds a third, and walk you through a real-world PIM rollout step by step — design, settings, code, detections and the DFIR questions you'll want answered when a privileged account goes wrong."
 header:
   image: /images/posts/pim/hero.jpg
 ---
 
-![Global Admin is not Azure Owner: designing Microsoft Entra PIM across three access layers](/images/posts/pim/hero.jpg)
+<p align="center">
+<img src="/images/posts/pim/hero.jpg" alt="Global Admin is not Azure Owner: designing Microsoft Entra PIM across three access layers" style="margin-inline:auto;"/>
+</p>
 
-A short LinkedIn post by <a href="https://www.linkedin.com/feed/update/urn:li:activity:7499820735549321216/" target="_blank" rel="noopener">Rishi .P</a> caught my attention this week with a point I wish more teams heard early: <strong>Global Administrator and Azure Owner are not the same thing</strong>. Before configuring PIM, ask <em>what exactly you're protecting</em> — Entra administration, Azure resources, or membership of a privileged group. The post promised a real-world PIM scenario next, and that's exactly where I see organizations stumble.
+<h3><strong>Short introduction</strong></h3>
+This week I came across a short LinkedIn post by <a href="https://www.linkedin.com/feed/update/urn:li:activity:7499820735549321216/" target="_blank" rel="noopener">Rishi .P</a> that made a point I wish more people heard early: <strong>Global Administrator and Azure Owner are not the same thing</strong>. Before you configure PIM, you should ask <em>what exactly you are protecting</em>: Entra administration, Azure resources, or membership of a privileged group. The post ended with a promise of a real-world PIM scenario, and that idea stayed with me, because it is exactly where I see organizations go wrong.
 
-In incident response I rarely see an attacker "hack" a firewall. I see them <strong>walk a privilege path</strong>: a helpdesk account that can reset an admin's password, an app registration that can grant itself roles, a Global Admin who flips one toggle and becomes owner of every Azure subscription. So let's take that three-layer idea further — the layers, the hidden bridges between them, and a complete rollout with settings, code, detections and the forensic questions behind it.
+In incident response, I rarely see an attacker "hack" a firewall. I see them <strong>walk a privilege path</strong>: a helpdesk account that can reset an admin's password, an app registration that can grant itself roles, a Global Admin who flips one toggle and becomes owner of every Azure subscription. In this article I would like to build on that three-layer idea: explain each layer, the hidden bridges between them, and then walk through a complete PIM rollout with the settings, the code, the detections and the forensic questions behind it.
 
-## Two permission worlds, and one bridge
+&nbsp;
+<h3><strong>Two permission worlds, and one bridge</strong></h3>
 Microsoft's cloud has two separate authorization systems that look similar but don't share permissions:
 
 - **Microsoft Entra roles** control the <em>directory</em> and Microsoft 365: users, groups, apps, Conditional Access, Exchange, Intune. Scope: the tenant, or an administrative unit.
@@ -59,9 +63,10 @@ A Global Administrator has <strong>no access to Azure resources by default</stro
 </svg>
 </div>
 
-> **⚠ Attacker favourite:** The elevate-access toggle is a legitimate break-glass feature, for example to recover a subscription nobody owns anymore. It is also a known attacker move: threat actors such as Storm-0501 have used it to jump from a compromised Entra admin into Azure. Treat every use of it as an alert, not a log line.
+> **_NOTE:_**  The elevate-access toggle is a legitimate break-glass feature, for example to recover a subscription nobody owns anymore. It is also a known attacker move: threat actors such as Storm-0501 have used it to jump from a compromised Entra admin into Azure. Treat every use of it as an alert, not a log line.
 
-## Layer 1 — Entra roles: who controls identity
+&nbsp;
+<h3><strong>Layer 1 — Entra roles: who controls identity</strong></h3>
 These roles decide who can change <em>identities and policies</em>. Not all of them are equal. Some are effectively Global Administrator, because they control something GA depends on:
 
 | Role | Why it's (near) tier-0 | PIM treatment |
@@ -76,7 +81,8 @@ These roles decide who can change <em>identities and policies</em>. Not all of t
 | **Intune / Exchange / SharePoint Administrator** | Code execution on devices, access to all mail, all files | Justification + ticket, ≤ 8 h. Intune can run code as SYSTEM on every managed device, so treat it as close to tier-0 |
 | **User / Authentication / Helpdesk Administrator** | Password resets for non-admins | Self-activation, ≤ 8 h, or administrative units to limit scope |
 
-## Layer 2 — Azure RBAC: who controls resources
+&nbsp;
+<h3><strong>Layer 2 — Azure RBAC: who controls resources</strong></h3>
 In Azure, the <em>scope</em> matters as much as the role. Owner on one resource group is a small risk. Owner on the root management group is the keys to everything:
 
 | Role | Can do | Watch out for |
@@ -88,7 +94,8 @@ In Azure, the <em>scope</em> matters as much as the role. Owner on one resource 
 | **Data plane roles** (Key Vault Secrets Officer, Storage Blob Data Owner…) | Read and write the data itself | Often missed in reviews, though they protect the most valuable data |
 | **Reader** | Read configuration | Usually safe to keep standing |
 
-## Layer 3 — PIM for Groups: access to anything a group can hold
+&nbsp;
+<h3><strong>Layer 3 — PIM for Groups: access to anything a group can hold</strong></h3>
 PIM for Groups gives users <strong>temporary membership or ownership</strong> of a security group or Microsoft 365 group. Whatever that group grants — an Entra role, Azure roles, an app role, Defender or Intune RBAC, a SaaS application through provisioning — becomes just-in-time too.
 
 Key facts from Microsoft's documentation that shape the design:
@@ -99,9 +106,10 @@ Key facts from Microsoft's documentation that shape the design:
 4. **Require approval for groups that elevate into Entra roles.** Otherwise a less-privileged admin who can reset a member's password could activate on that member's behalf.
 5. **Activation can trigger SCIM provisioning** to a SaaS app within minutes. That makes "JIT admin in Salesforce/ServiceNow/AWS" possible from one place.
 
-> **Microsoft's advice:** For the Exchange, SharePoint and Purview admin roles, Microsoft recommends using <strong>PIM for Entra roles directly</strong> instead of PIM for Groups, because permissions that flow through a group activation can take a long time to become effective in those services.
+> **_NOTE:_**  For the Exchange, SharePoint and Purview admin roles, Microsoft recommends using <strong>PIM for Entra roles directly</strong> instead of PIM for Groups, because permissions that flow through a group activation can take a long time to become effective in those services.
 
-## The question to ask first: what am I protecting?
+&nbsp;
+<h3><strong>The question to ask first: what am I protecting?</strong></h3>
 Before touching any PIM setting, I put every privileged request through this simple decision tree:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -162,8 +170,9 @@ Before touching any PIM setting, I put every privileged request through this sim
 </svg>
 </div>
 
-## A real-world scenario: rolling out PIM step by step
-Time to make it concrete. Imagine a company with about 5,000 users, one Entra tenant, and around 40 Azure subscriptions under a management group hierarchy. Today they have 11 permanent Global Administrators, a platform team with Owner on every subscription, and a SOC that "sometimes needs admin". These are the five groups of people we need to serve:
+&nbsp;
+<h3><strong>A real-world scenario: rolling out PIM step by step</strong></h3>
+Lets make it concrete. Imagine a company with about 5,000 users, one Entra tenant, and around 40 Azure subscriptions under a management group hierarchy. Today they have 11 permanent Global Administrators, a platform team with Owner on every subscription, and a SOC that "sometimes needs admin". These are the five groups of people we need to serve:
 
 | Persona | What they really need | Layer | Design |
 |---|---|---|---|
@@ -239,7 +248,7 @@ $all | Export-Csv .\standing-privilege.csv -NoTypeInformation
 "{0} standing privileged assignments found - every one should be eligible (PIM) or a documented break-glass." -f ($all | Where-Object Standing).Count
 ```
 
-> **Timing:** Run it during a quiet period. Assignments someone has activated through PIM at that moment also appear as active, but with an end date. The `Standing` column only flags assignments with no end date.
+> **_NOTE:_**  Run it during a quiet period. Assignments someone has activated through PIM at that moment also appear as active, but with an end date. The `Standing` column only flags assignments with no end date.
 
 <strong>Step 2 — Prepare the ground before converting anyone.</strong> Four things must exist first, or the rollout will lock people out or be bypassed:
 
@@ -430,7 +439,8 @@ This is what happens behind the scenes during one activation, and where each con
 
 <strong>Step 7 — Review and expire.</strong> Configure <strong>access reviews</strong> for PIM roles and groups (quarterly for tier 1–2, monthly for tier 0), and let eligibilities expire. "Eligible forever" is the new "permanent admin": it removes the time limit from the activation, but not from the attack surface.
 
-## Detection: watching the privilege paths
+&nbsp;
+<h3><strong>Detection: watching the privilege paths</strong></h3>
 PIM writes everything to the Entra audit log. These are the rules I would build first, in Microsoft Sentinel or any SIEM that receives Entra logs:
 
 <strong>1. Role assigned outside PIM.</strong> After the rollout, this should almost never happen:
@@ -493,9 +503,10 @@ AuditLogs
 | project TimeGenerated, OperationName, Actor = tostring(InitiatedBy.user.userPrincipalName), Object
 ```
 
-> **Schema drift:** Exact `OperationName` strings differ slightly between Entra roles, Azure resources and groups, and Microsoft occasionally renames them. That's why the rules above match on stable keywords (`has "PIM activation"`, `has "eligible"`). Run each query over 30 days of your own data before turning it into an alert.
+> **_NOTE:_**  Exact `OperationName` strings differ slightly between Entra roles, Azure resources and groups, and Microsoft occasionally renames them. That's why the rules above match on stable keywords (`has "PIM activation"`, `has "eligible"`). Run each query over 30 days of your own data before turning it into an alert.
 
-## DFIR: questions to answer when a privileged account goes wrong
+&nbsp;
+<h3><strong>DFIR: questions to answer when a privileged account goes wrong</strong></h3>
 PIM is not only a prevention control. It is one of the best <strong>forensic data sources</strong> in the tenant, because it turns "this person is an admin" into precise time windows. When an admin account is suspected, I work through these questions:
 
 | # | Question | Where the answer is |
@@ -531,11 +542,13 @@ union
 | order by TimeGenerated asc
 ```
 
-> **Scaling up:** The constant-key join is fine for one suspect account over a few weeks. For a whole tenant, bin both sides by hour and join on the bin instead. Microsoft Graph activity logs and the Intune audit log can be added to the `union` the same way.
+> **_NOTE:_**  The constant-key join is fine for one suspect account over a few weeks. For a whole tenant, bin both sides by hour and join on the bin instead. Microsoft Graph activity logs and the Intune audit log can be added to the `union` the same way.
 
 If the account is confirmed compromised, contain in this order: <strong>remove the eligibility</strong> (not only the active assignment, or the attacker simply activates again), revoke sessions, reset credentials and remove attacker-registered MFA methods, then review everything from question 6 and 7. Finally, rotate the break-glass credentials if there is any chance they were exposed.
 
-## Common mistakes
+&nbsp;
+<h3><strong>Common mistakes</strong></h3>
+
 | Mistake | Why it hurts | Better |
 |---|---|---|
 | "We have PIM" but eligible assignments never expire | Same attack surface as permanent, plus a false sense of security | Eligibility expiry + access reviews |
@@ -546,16 +559,18 @@ If the account is confirmed compromised, contain in this order: <strong>remove t
 | Nobody watches elevate access | The quietest path from Entra into Azure | Alert on every use; remove root UAA afterwards |
 | Service accounts put in PIM | Automation breaks, then someone makes it permanent "temporarily" | Managed / workload identities with least privilege |
 
-## Download the scripts
+&nbsp;
+<h3><strong>Download the scripts</strong></h3>
+
 - <a href="/assets/files/pim/Find-StandingPrivilege.ps1" target="_blank" rel="noopener">Find-StandingPrivilege.ps1</a> — standing privilege across Entra and Azure
 - <a href="/assets/files/pim/Set-PimTier0.ps1" target="_blank" rel="noopener">Set-PimTier0.ps1</a> — PIM settings and eligibility as code
 - <a href="/assets/files/pim/Start-PimActivation.ps1" target="_blank" rel="noopener">Start-PimActivation.ps1</a> — one-command activation
 - <a href="/assets/files/pim/pim-eligible.bicep" target="_blank" rel="noopener">pim-eligible.bicep</a> — Azure eligibility in Git
 
-> **Tested how:** I parse-checked all the PowerShell, confirmed every cmdlet and parameter exists in the current Microsoft Graph and Az modules, and compiled the Bicep file. Test the write operations in a non-production tenant first. A wrong PIM rule on Global Administrator can lock out your own admins, which is exactly why the break-glass accounts come first.
+> **_NOTE:_**  I parse-checked all the PowerShell, confirmed every cmdlet and parameter exists in the current Microsoft Graph and Az modules, and compiled the Bicep file. Test the write operations in a non-production tenant first. A wrong PIM rule on Global Administrator can lock out your own admins, which is exactly why the break-glass accounts come first.
 
-## Follow the paths, not just the roles
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Global Administrator and Azure Owner live in different permission worlds, and PIM for Groups lets one activation reach into both. A good PIM design starts with the question from the original post — <em>what am I protecting?</em> — and then follows the paths between the layers: elevate access, role-assignable groups, app credentials and password-reset rights. Convert standing access tier by tier, enforce step-up with an authentication context, let eligibility expire, and alert on anything that happens outside PIM. When something does go wrong, the activation windows become the backbone of your investigation timeline. Thanks to <a href="https://www.linkedin.com/feed/update/urn:li:activity:7499820735549321216/" target="_blank" rel="noopener">Rishi .P</a> for the post that inspired this one.
 
-Global Administrator and Azure Owner live in different permission worlds, and PIM for Groups lets a single activation reach into both. Good PIM design starts with the original post's question — <em>what am I protecting?</em> — and then follows the paths between layers: elevate access, role-assignable groups, app credentials and password-reset rights. Convert standing access tier by tier, enforce step-up through an authentication context, let eligibility expire, and alert on anything that happens outside PIM. When something does go wrong, activation windows become the backbone of your timeline. Thanks again to <a href="https://www.linkedin.com/feed/update/urn:li:activity:7499820735549321216/" target="_blank" rel="noopener">Rishi .P</a> for the spark.
-
-Further reading: <a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure" target="_blank" rel="noopener">Microsoft Entra Privileged Identity Management</a>, <a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/concept-pim-for-groups" target="_blank" rel="noopener">PIM for Groups</a>, <a href="https://learn.microsoft.com/en-us/azure/role-based-access-control/elevate-access-global-admin" target="_blank" rel="noopener">elevate access for a Global Administrator</a>, and the <a href="https://learn.microsoft.com/en-us/graph/api/resources/privilegedidentitymanagementv3-overview" target="_blank" rel="noopener">PIM APIs in Microsoft Graph</a>.
+You can read more in the official documentation: <a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure" target="_blank" rel="noopener">Microsoft Entra Privileged Identity Management</a>, <a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/concept-pim-for-groups" target="_blank" rel="noopener">PIM for Groups</a>, <a href="https://learn.microsoft.com/en-us/azure/role-based-access-control/elevate-access-global-admin" target="_blank" rel="noopener">elevate access for a Global Administrator</a>, and the <a href="https://learn.microsoft.com/en-us/graph/api/resources/privilegedidentitymanagementv3-overview" target="_blank" rel="noopener">PIM APIs in Microsoft Graph</a>.

@@ -1,17 +1,19 @@
 ---
 title: "Building a REST API with Django REST Framework in 10 Steps"
-excerpt: "From an empty folder to an authenticated, searchable, tested REST API — ten steps with Django REST Framework, and a browsable API you can click through at the end."
+excerpt: "In this article I would like to present how to build a REST API with Django REST Framework step by step — models, serializers, permissions, viewsets, routing, pagination, search and tests — ending with an authenticated API you can explore in the browser."
 header:
   image: /images/posts/django-rest-api/project-list.png
 ---
 
-![Django REST Framework browsable API](/images/posts/django-rest-api/project-list.png)
+<p align="center">
+<img src="/images/posts/django-rest-api/project-list.png" alt="Django REST Framework browsable API" style="margin-inline:auto;"/>
+</p>
 
-Django sits behind several of my projects, including Mon9et, the Quran recitation checker my team built. The moment a Vue frontend or a mobile app needs data, Django turns into an API server — and <strong>Django REST Framework (DRF)</strong> makes that surprisingly painless.
+<h3><strong>Short introduction</strong></h3>
+Django is the backend framework behind several of my projects, including Mon9et, a Quran recitation checker my team built. When a frontend like Vue or a mobile app needs data, Django becomes an API server, and <strong>Django REST Framework (DRF)</strong> makes that surprisingly easy. In this article I would like to present how to build a complete REST API in 10 steps: a "projects" API with authentication, owner-only editing, pagination, search and tests. The screenshot above is the final result — DRF's browsable API, filled with a few of my own projects.
 
-The screenshot above is where we end up: DRF's browsable API, filled with a few of my own projects. Getting there takes ten steps, from models to owner-only permissions, search, pagination and tests.
-
-## How a request flows through DRF
+&nbsp;
+<h3><strong>How a request flows through DRF</strong></h3>
 Before we start, here is the path every request takes. We will build each of these boxes:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -40,14 +42,18 @@ Before we start, here is the path every request takes. We will build each of the
 </svg>
 </div>
 
-## Step 1 — Create a virtual environment
+&nbsp;
+<h3><strong>Step 1 — Create a virtual environment</strong></h3>
+
 ```bash
 python -m venv venv && source venv/bin/activate
 pip install django djangorestframework django-filter
 pip freeze > requirements.txt
 ```
 
-## Step 2 — Create the project and the app
+&nbsp;
+<h3><strong>Step 2 — Create the project and the app</strong></h3>
+
 ```bash
 django-admin startproject core .
 python manage.py startapp projects
@@ -59,7 +65,9 @@ Then add the apps to `core/settings.py`:
 INSTALLED_APPS += ["rest_framework", "django_filters", "projects"]
 ```
 
-## Step 3 — The model
+&nbsp;
+<h3><strong>Step 3 — The model</strong></h3>
+
 ```python
 # projects/models.py
 from django.conf import settings
@@ -80,14 +88,17 @@ class Project(models.Model):
         return self.name
 ```
 
-## Step 4 — Create the database tables
+&nbsp;
+<h3><strong>Step 4 — Create the database tables</strong></h3>
+
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-## Step 5 — The serializer
+&nbsp;
+<h3><strong>Step 5 — The serializer</strong></h3>
 The serializer converts model objects to JSON and back, and it is also where validation lives:
 
 ```python
@@ -108,7 +119,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         return value.strip()
 ```
 
-## Step 6 — A permission class
+&nbsp;
+<h3><strong>Step 6 — A permission class</strong></h3>
 Everyone can read projects, but only the owner can change or delete one:
 
 ```python
@@ -122,7 +134,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.owner == request.user
 ```
 
-## Step 7 — The ViewSet
+&nbsp;
+<h3><strong>Step 7 — The ViewSet</strong></h3>
 This is where DRF really saves time — the full create, read, update and delete logic in about 10 lines:
 
 ```python
@@ -146,7 +159,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 ```
 
-## Step 8 — Routes
+&nbsp;
+<h3><strong>Step 8 — Routes</strong></h3>
+
 ```python
 # core/urls.py
 from django.contrib import admin
@@ -164,9 +179,9 @@ urlpatterns = [
 ]
 ```
 
-Now run `python manage.py runserver 8765` and open `http://127.0.0.1:8765/api/` in the browser. The API root appears, with a link to the new endpoint:
+Now run `python manage.py runserver 8765` and open `http://127.0.0.1:8765/api/` in the browser. You should see the API root, with a link to our new endpoint:
 
-![DRF API root](/images/posts/django-rest-api/api-root.png)
+<img src="/images/posts/django-rest-api/api-root.png" alt="DRF API root" style="margin-inline:auto;" />
 
 That one `register` call created all of these endpoints:
 
@@ -178,8 +193,9 @@ That one `register` call created all of these endpoints:
 | PUT / PATCH | `/api/projects/{id}/` | Update |
 | DELETE | `/api/projects/{id}/` | Delete |
 
-## Step 9 — Pagination, search, authentication and throttling
-The defaults for the whole API go in `core/settings.py`:
+&nbsp;
+<h3><strong>Step 9 — Pagination, search, authentication and throttling</strong></h3>
+Lets configure the defaults for the whole API in `core/settings.py`:
 
 ```python
 REST_FRAMEWORK = {
@@ -202,13 +218,14 @@ REST_FRAMEWORK = {
 
 Now search and ordering work with query parameters. For example `/api/projects/?search=django&ordering=-created_at` finds only the Django project:
 
-![Search and ordering in the browsable API](/images/posts/django-rest-api/search-and-ordering.png)
+<img src="/images/posts/django-rest-api/search-and-ordering.png" alt="Search and ordering in the browsable API" style="margin-inline:auto;" />
 
 Once you log in (top right corner), a form appears at the bottom of the page. If I try to create a project with a name that is too short, the validation from step 5 returns a `400 Bad Request` with a clear message:
 
-![Validation error in the browsable API](/images/posts/django-rest-api/validation-error.png)
+<img src="/images/posts/django-rest-api/validation-error.png" alt="Validation error in the browsable API" style="margin-inline:auto;" />
 
-## Step 10 — Test it
+&nbsp;
+<h3><strong>Step 10 — Test it</strong></h3>
 The two most important behaviours are that the owner comes from the logged-in user (not from the request body), and that nobody can delete someone else's project:
 
 ```python
@@ -244,8 +261,8 @@ Ran 2 tests in 2.660s
 OK
 ```
 
-> **Before production:** Before going to production: set `DEBUG = False`, read `SECRET_KEY` and database credentials from environment variables, set `ALLOWED_HOSTS`, run `python manage.py check --deploy` and fix every warning, serve the app with gunicorn behind a reverse proxy, and use PostgreSQL instead of SQLite. If you host on Azure, my [App Service article](/Azure-App-Service-Hosting-Guide/) shows how to deploy it.
+> **_NOTE:_**  Before going to production: set `DEBUG = False`, read `SECRET_KEY` and database credentials from environment variables, set `ALLOWED_HOSTS`, run `python manage.py check --deploy` and fix every warning, serve the app with gunicorn behind a reverse proxy, and use PostgreSQL instead of SQLite. If you host on Azure, my [App Service article](/Azure-App-Service-Hosting-Guide/) shows how to deploy it.
 
-## Ten steps later
-
-A model, a serializer, a permission class and a ViewSet give you a full REST API with validation and owner-based permissions; a few settings add pagination, search, authentication and throttling. And the browsable API is a gift — every endpoint testable in the browser, no extra tools. The <a href="https://www.django-rest-framework.org/" target="_blank" rel="noopener">DRF documentation</a> is excellent when you need more.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+With Django REST Framework, a model, a serializer, a permission class and a ViewSet give you a complete REST API with validation and owner-based permissions, and a few settings add pagination, search, authentication and throttling. The browsable API is a great bonus: you can test every endpoint in the browser without any extra tools. You can read more in the official <a href="https://www.django-rest-framework.org/" target="_blank" rel="noopener">Django REST Framework documentation</a>.

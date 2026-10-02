@@ -1,19 +1,23 @@
 ---
 title: "Microsoft Intune Field Manual: Architecture, Build, SIEM Logging, DFIR and Security Review"
-excerpt: "Intune can run code as SYSTEM on every laptop you own — and in 2026 attackers used exactly that to wipe a company's devices. Architecture, network, modules, SIEM logging, DFIR and a security review, all in one field manual."
+excerpt: "In this article I would like to present Microsoft Intune from every angle I care about as a DFIR specialist: how the service is built and how devices talk to it, the network it needs, every major module, a phased implementation plan, how to get its telemetry into a SIEM step by step, how to investigate a device and the tenant itself, and a security review checklist with ready-to-run scripts."
 header:
   image: /images/posts/intune/hero.jpg
 ---
 
-![Microsoft Intune field manual: architecture, build, network, SIEM logging, DFIR and security review](/images/posts/intune/hero.jpg)
+<p align="center">
+<img src="/images/posts/intune/hero.jpg" alt="Microsoft Intune field manual: architecture, build, network, SIEM logging, DFIR and security review" style="margin-inline:auto;"/>
+</p>
 
-Intune is one of those platforms everyone in IT touches and few people see completely. The endpoint team sees profiles and apps, the identity team sees Conditional Access, and the SOC sees… usually nothing, until the day something goes wrong. In March 2026, attackers holding a single administrator account used Stryker's own Intune tenant to <strong>remote-wipe a very large number of corporate and personal devices</strong> — without deploying any malware at all. A management plane that can run code as SYSTEM on every laptop is also a weapon.
+<h3><strong>Short introduction</strong></h3>
+Intune is one of those platforms that everyone in IT touches, but few people see completely. The endpoint team sees profiles and apps, the identity team sees Conditional Access, and the SOC sees… usually nothing, until the day something goes wrong. That gap is dangerous. In March 2026, attackers who got hold of an administrator account used Stryker's own Intune tenant to <strong>remote-wipe a very large number of corporate and personal devices</strong>, without deploying a single piece of malware. Intune is a management plane, and a management plane that can run code as SYSTEM on every laptop is also a weapon.
 
-This is the Intune explanation I wish I'd had: architecture and network first, then every major module and a practical build plan, and finally what security teams care about most — <strong>SIEM logging, DFIR on endpoints and on the tenant, and a security review</strong>. Every script is downloadable at the end.
+In this article I would like to present Intune the way I wish someone had explained it to me: from the architecture and the network, through every major module and a practical build plan, to the parts that matter most for security teams — <strong>logging into a SIEM, DFIR on endpoints and on the tenant, and a security review</strong>. Every script in this post is also available to download at the end.
 
-> **Freshness check:** Intune changes monthly. Everything here was checked against Microsoft's documentation as of October 2026, including the network endpoint list, the diagnostic log categories and the July 2026 licensing changes. Always re-check the linked official pages before you change a firewall or a production policy.
+> **_NOTE:_**  Intune changes monthly. Everything here was checked against Microsoft's documentation as of October 2026, including the network endpoint list, the diagnostic log categories and the July 2026 licensing changes. Always re-check the linked official pages before you change a firewall or a production policy.
 
-## Intune in one picture: the architecture
+&nbsp;
+<h3><strong>Intune in one picture: the architecture</strong></h3>
 Intune is a <strong>cloud-only, multi-tenant SaaS service</strong> running on Azure. There is no server to install: your tenant lives in a regional scale unit (you can see it under <em>Tenant administration → Tenant status → Tenant location</em>, for example "Europe 0202"). Everything else is built around three things: <strong>Microsoft Entra ID</strong> for identity, <strong>push channels</strong> to wake devices up, and <strong>connectors</strong> to the outside world:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -87,7 +91,8 @@ Three facts from this picture are worth remembering:
 2. **Compliance becomes identity.** Intune writes the device's compliance state to its Entra ID device object, and Conditional Access reads it from there. That is how "only healthy devices can open email" works.
 3. **Everything is an API.** The admin center is just a client of Microsoft Graph. Anything an admin can click, a script (or an attacker with a token) can do, which matters a lot later in this article.
 
-## How a Windows device actually talks to Intune
+&nbsp;
+<h3><strong>How a Windows device actually talks to Intune</strong></h3>
 Windows has two management agents, and you need to know both for troubleshooting and for forensics:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -139,9 +144,10 @@ Windows has two management agents, and you need to know both for troubleshooting
 
 The practical meaning: <strong>settings</strong> (CSP policies) can take up to eight hours to land, unless the device gets a push or the user clicks <em>Sync</em>. <strong>Apps and scripts</strong> follow the IME's hourly cycle. When a user says "the policy didn't apply", the first question is always "which agent delivers it?".
 
-> **In an incident:** The same split matters for an incident. A malicious <strong>script</strong> pushed from a compromised admin account typically reaches most online Windows devices within about an hour. A malicious <strong>configuration</strong> spreads more slowly, unless the attacker also triggers a sync.
+> **_NOTE:_**  The same split matters for an incident. A malicious <strong>script</strong> pushed from a compromised admin account typically reaches most online Windows devices within about an hour. A malicious <strong>configuration</strong> spreads more slowly, unless the attacker also triggers a sync.
 
-## Licensing in 2026 (what changed in July)
+&nbsp;
+<h3><strong>Licensing in 2026 (what changed in July)</strong></h3>
 Microsoft's December 2025 packaging announcement took effect on <strong>1 July 2026</strong>. Several features that used to be paid Intune Suite add-ons are now part of the Microsoft 365 E3 and E5 plans:
 
 | Capability | Plan 1 (M365 E3/E5, Business Premium, EMS) | Now in M365 E3 | Now in M365 E5 |
@@ -155,10 +161,11 @@ Microsoft's December 2025 packaging announcement took effect on <strong>1 July 2
 | Microsoft Cloud PKI | add-on before | — | ✅ |
 | Security Copilot in Intune (agents) | — | — | ✅ |
 
-> **Licensing caveat:** This table summarises the official announcement at a high level. Check your agreement and the Microsoft licensing guide for your exact SKUs before planning a rollout around a feature.
+> **_NOTE:_**  This table summarises the official announcement at a high level. Check your agreement and the Microsoft licensing guide for your exact SKUs before planning a rollout around a feature.
 
-## The modules, one by one
-Every major area of Intune, what it is for, and the one thing I always check in it:
+&nbsp;
+<h3><strong>The modules, one by one</strong></h3>
+In this section I want to go through every major area of Intune, what it is for, and the one thing I always check in it.
 
 | Module | What it does | Key building blocks | What I always check |
 |---|---|---|---|
@@ -178,7 +185,8 @@ Every major area of Intune, what it is for, and the one thing I always check in 
 | **Cloud PKI** | Certificates without an on-premises CA | Root and issuing CAs in the cloud, SCEP profiles | Certificate templates scoped to the right devices |
 | **Tenant administration** | Governs the tenant | RBAC roles and scope tags, Multi Admin Approval, diagnostic settings, connectors, audit logs, terms and conditions | Everything in the security review section below |
 
-## Network topology and connectivity
+&nbsp;
+<h3><strong>Network topology and connectivity</strong></h3>
 Intune needs no inbound ports. Every connection is <strong>outbound from the device</strong>, mostly TCP 443, to Microsoft's edge (Azure Front Door). Most of the work is making sure your proxy, firewall and TLS inspection don't break that path:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -255,10 +263,11 @@ Microsoft also publishes a connectivity test script. Run it from a managed devic
 .\PsExec.exe -accepteula -i -s powershell.exe
 ```
 
-> **Outdated scripts:** Microsoft states that the old PowerShell scripts that read Intune endpoints from the Office 365 endpoint web service <strong>no longer return accurate data</strong>. Use the consolidated list on the official page instead.
+> **_NOTE:_**  Microsoft states that the old PowerShell scripts that read Intune endpoints from the Office 365 endpoint web service <strong>no longer return accurate data</strong>. Use the consolidated list on the official page instead.
 
-## How to build it: a phased implementation
-Here's how I would build an Intune tenant from zero, or rebuild one that grew without a plan. The order matters. Most failed rollouts enforce Conditional Access before compliance reporting is trustworthy.
+&nbsp;
+<h3><strong>How to build it: a phased implementation</strong></h3>
+Lets go through how I would build an Intune tenant from zero, or rebuild one that grew without a plan. The order matters. Most failed rollouts enforce Conditional Access before compliance reporting is trustworthy.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 420" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Six implementation phases: phase 0 foundations, phase 1 pilot enrollment, phase 2 baseline policies, phase 3 apps and updates in rings, phase 4 enforce Conditional Access, phase 5 operate and monitor">
@@ -345,9 +354,10 @@ foreach ($t in $types) {
 }
 ```
 
-> **Full-fidelity backup:** Settings catalog policies (`configurationPolicies`) keep their individual settings in a separate `/settings` relationship. For a full-fidelity backup, also request `configurationPolicies/{id}?$expand=settings`, or use a maintained community tool such as IntuneManagement or Microsoft365DSC.
+> **_NOTE:_**  Settings catalog policies (`configurationPolicies`) keep their individual settings in a separate `/settings` relationship. For a full-fidelity backup, also request `configurationPolicies/{id}?$expand=settings`, or use a maintained community tool such as IntuneManagement or Microsoft365DSC.
 
-## Logging: what Intune records
+&nbsp;
+<h3><strong>Logging: what Intune records</strong></h3>
 Now the part security teams usually miss. Intune telemetry comes from <strong>four different places</strong>, and you need all of them to tell a complete story:
 
 | Source | What's in it | Where it lives | Latency |
@@ -361,9 +371,10 @@ Now the part security teams usually miss. Intune telemetry comes from <strong>fo
 | **Defender for Endpoint** | What actually ran on the device: AgentExecutor → powershell.exe, files, network | Defender XDR advanced hunting / Sentinel | Near real time |
 | **Device-local logs** | IME logs, MDM event logs, registry. The device's own view | On the endpoint (see the DFIR section) | Collect on demand |
 
-> **Duplicates are normal:** Intune's own documentation says the export pipeline <strong>might duplicate up to 100% of the data published in a 24-hour period</strong>, and that the log schemas can change. Your SIEM pipeline must de-duplicate, and your detections should use `has` and `contains` instead of exact string matches.
+> **_NOTE:_**  Intune's own documentation says the export pipeline <strong>might duplicate up to 100% of the data published in a 24-hour period</strong>, and that the log schemas can change. Your SIEM pipeline must de-duplicate, and your detections should use `has` and `contains` instead of exact string matches.
 
-## Getting Intune telemetry into a SIEM, step by step
+&nbsp;
+<h3><strong>Getting Intune telemetry into a SIEM, step by step</strong></h3>
 The answer to "can it go to our SIEM?" is <strong>yes</strong>, and there are three supported paths. All of them start from the same place: Intune <strong>Diagnostic settings</strong>.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -473,7 +484,7 @@ with client:
     client.receive(on_event=on_event, starting_position="-1")
 ```
 
-> **Consumer groups:** Create a dedicated consumer group for each reader (`siem`, `archive`, …). Two readers on the same consumer group fight over partitions and lose events. Also note that this in-memory checkpoint is only for testing. In production, use a blob checkpoint store so a restart doesn't replay or skip data.
+> **_NOTE:_**  Create a dedicated consumer group for each reader (`siem`, `archive`, …). Two readers on the same consumer group fight over partitions and lose events. Also note that this in-memory checkpoint is only for testing. In production, use a blob checkpoint store so a restart doesn't replay or skip data.
 
 <strong>Step 6 — Validate.</strong> Make a harmless change, like renaming a test policy, and confirm the event arrives with the right actor:
 
@@ -486,7 +497,8 @@ IntuneAuditLogs
 | order by TimeGenerated desc
 ```
 
-## Detections worth building first
+&nbsp;
+<h3><strong>Detections worth building first</strong></h3>
 These are the analytics rules I would deploy on day one. They focus on <strong>Intune used as a weapon</strong>, because that is the scenario with the largest blast radius.
 
 <strong>1. Mass wipe or retire (the Stryker pattern)</strong>
@@ -563,9 +575,10 @@ DeviceProcessEvents
 | order by Devices desc
 ```
 
-> **Test before alerting:** The table names, `OperationName` values and `Properties` fields above match the documented schemas today, but Microsoft warns that these schemas can change. Test each rule against your own data before enabling it, and keep the matching broad (`has_any`) rather than exact.
+> **_NOTE:_**  The table names, `OperationName` values and `Properties` fields above match the documented schemas today, but Microsoft warns that these schemas can change. Test each rule against your own data before enabling it, and keep the matching broad (`has_any`) rather than exact.
 
-## DFIR on Intune — part 1: the three angles
+&nbsp;
+<h3><strong>DFIR on Intune — part 1: the three angles</strong></h3>
 In an investigation, Intune shows up in three very different roles:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -603,7 +616,8 @@ In an investigation, Intune shows up in three very different roles:
 </svg>
 </div>
 
-## DFIR on Intune — part 2: Windows endpoint artifacts
+&nbsp;
+<h3><strong>DFIR on Intune — part 2: Windows endpoint artifacts</strong></h3>
 This is the reference table I use on a Windows endpoint. Every path here is written by the MDM stack or by the Intune Management Extension:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -646,7 +660,7 @@ This is the reference table I use on a Windows endpoint. Every path here is writ
 | Autopilot event log | `Microsoft-Windows-ModernDeployment-Diagnostics-Provider/Autopilot` | Profile download, OOBE progress. Shows <em>when</em> the device was provisioned |
 | PowerShell logging | `Microsoft-Windows-PowerShell/Operational` event 4104 | Script block logging captures the content of Intune-delivered scripts, if enabled. <strong>Enable it via Intune</strong> |
 
-> **Collect first:** IME logs roll over at about 3 MB, and the older file is renamed. On a busy device, a week of history can be gone. If you suspect Intune was abused, <strong>collect the logs first</strong>, before anyone "re-syncs" the device to test.
+> **_NOTE:_**  IME logs roll over at about 3 MB, and the older file is renamed. On a busy device, a week of history can be gone. If you suspect Intune was abused, <strong>collect the logs first</strong>, before anyone "re-syncs" the device to test.
 
 <strong>Triage collector.</strong> This script collects everything in the table above into one hashed zip. Run it elevated, or as SYSTEM through your EDR's live response:
 
@@ -739,11 +753,12 @@ function ConvertFrom-CMTraceLog {
 # ConvertFrom-CMTraceLog .\logs\*.log | Where-Object Severity -eq 'Error' | Sort-Object Time | Export-Csv timeline.csv -NoTypeInformation
 ```
 
-> **Time zones:** IME timestamps are in the device's <strong>local time</strong>, and the time zone offset is written next to the time value. Convert everything to UTC before merging with SIEM data, or your timeline will be shifted by hours.
+> **_NOTE:_**  IME timestamps are in the device's <strong>local time</strong>, and the time zone offset is written next to the time value. Convert everything to UTC before merging with SIEM data, or your timeline will be shifted by hours.
 
 <strong>macOS, iOS and Android, briefly.</strong> On macOS, the Intune agent logs live in `/Library/Logs/Microsoft/Intune/` (system) and `~/Library/Logs/Microsoft/Intune/` (user). The installed MDM profiles are listed with `sudo profiles show -all`, and MDM activity appears in the unified log: `log show --predicate 'subsystem == "com.apple.ManagedClient"' --last 7d`. On iOS and Android there is very little to collect from the device itself. Use the <strong>Company Portal "send logs"</strong> feature, an iOS sysdiagnose, or an Android bug report, and rely mostly on the cloud-side logs.
 
-## DFIR on Intune — part 3: investigating the tenant
+&nbsp;
+<h3><strong>DFIR on Intune — part 3: investigating the tenant</strong></h3>
 When the question is "was our Intune used against us?", the evidence is in the cloud. This is the workflow I follow:
 
 1. **Preserve first.** Export `IntuneAuditLogs`, Entra `AuditLogs`, `SigninLogs` and `MicrosoftGraphActivityLogs` for the incident window, plus the current configuration (backup script above). Don't rely on portal retention.
@@ -806,7 +821,7 @@ foreach ($r in Get-GraphAll "https://graph.microsoft.com/beta/deviceManagement/d
 Write-Host "Done. Review $Out\audit_events.csv first, then diff scripts against your known-good baseline."
 ```
 
-> **Requirements:** This script needs PowerShell 7 or later (it uses the `??` operator) and the Microsoft Graph PowerShell SDK. Run it from a clean, trusted admin workstation, <strong>not</strong> from a device managed by the tenant you are investigating.
+> **_NOTE:_**  This script needs PowerShell 7 or later (it uses the `??` operator) and the Microsoft Graph PowerShell SDK. Run it from a clean, trusted admin workstation, <strong>not</strong> from a device managed by the tenant you are investigating.
 
 <strong>Using Intune as an IR tool.</strong> During an incident the same power works for you:
 
@@ -820,7 +835,8 @@ Write-Host "Done. Review $Out\audit_events.csv first, then diff scripts against 
 | Kill a stolen credential | **Rotate LAPS password / BitLocker key**, revoke the user's sessions in Entra | Rotate after the investigation has captured what it needs |
 | Remove access from a lost device | **Retire** (corporate data only) before **wipe** | Wipe destroys evidence. Image first if the device is in scope |
 
-## DFIR on Intune — part 4: when the admin account is the threat
+&nbsp;
+<h3><strong>DFIR on Intune — part 4: when the admin account is the threat</strong></h3>
 This is the playbook for the worst case: an attacker controls an Intune administrator, or an app registration with Intune Graph permissions.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -863,9 +879,10 @@ This is the playbook for the worst case: an attacker controls an Intune administ
 4. **Use break-glass carefully.** Your break-glass accounts are excluded from CA. Confirm they weren't used, and rotate their credentials after the incident.
 5. **Rebuild trust.** Compare the configuration with your last known-good backup, restore it, and keep the diff as evidence.
 
-> **Even for apps:** Multi Admin Approval also covers <strong>application-authenticated Graph calls</strong>, not only clicks in the portal. An attacker with a stolen app secret still hits the approval gate, unless that app was explicitly excluded in the access policy. Keep that exclusion list empty, or very short.
+> **_NOTE:_**  Multi Admin Approval also covers <strong>application-authenticated Graph calls</strong>, not only clicks in the portal. An attacker with a stolen app secret still hits the approval gate, unless that app was explicitly excluded in the access policy. Keep that exclusion list empty, or very short.
 
-## Security review: the checklist
+&nbsp;
+<h3><strong>Security review: the checklist</strong></h3>
 These are the checks I run when reviewing an Intune tenant, grouped by domain. Every "no" is a finding:
 
 | # | Domain | Check | Why it matters |
@@ -939,9 +956,11 @@ $results | Format-Table -AutoSize
 $results | Export-Csv ".\intune-security-review.csv" -NoTypeInformation
 ```
 
-> **Treat it as a start:** Treat the output as a starting point for the review, not a score. Some Graph properties used here are on the <em>beta</em> endpoint and can change. If a check returns an error, verify that setting manually in the admin center.
+> **_NOTE:_**  Treat the output as a starting point for the review, not a score. Some Graph properties used here are on the <em>beta</em> endpoint and can change. If a check returns an error, verify that setting manually in the admin center.
 
-## Common mistakes I keep seeing
+&nbsp;
+<h3><strong>Common mistakes I keep seeing</strong></h3>
+
 | Mistake | Consequence | Better |
 |---|---|---|
 | Everyone in IT is "Intune Administrator" | One phished helpdesk account can wipe the company | Custom roles + scope tags + PIM + MAA |
@@ -952,7 +971,8 @@ $results | Export-Csv ".\intune-security-review.csv" -NoTypeInformation
 | Wiping a compromised laptop immediately | The evidence is destroyed | Isolate → collect → image if in scope → then retire/wipe |
 | Remediations used as "free admin" with no review | A future attacker's favourite feature is already normal noise | Code review, MAA, and the SIEM detection above |
 
-## Download the scripts
+&nbsp;
+<h3><strong>Download the scripts</strong></h3>
 All the scripts from this article, ready to adapt:
 
 - <a href="/assets/files/intune/Invoke-IntuneTriage.ps1" target="_blank" rel="noopener">Invoke-IntuneTriage.ps1</a> — endpoint artifact collector
@@ -961,10 +981,10 @@ All the scripts from this article, ready to adapt:
 - <a href="/assets/files/intune/Invoke-IntuneSecurityReview.ps1" target="_blank" rel="noopener">Invoke-IntuneSecurityReview.ps1</a> — posture checks
 - <a href="/assets/files/intune/intune_eventhub_consumer.py" target="_blank" rel="noopener">intune_eventhub_consumer.py</a> — Event Hubs → SIEM forwarder with de-duplication
 
-> **Tested how:** I tested every script for syntax, and tested the log parser and the Event Hubs de-duplication logic with sample data. The Graph scripts are read-only, but run them first in a test tenant or with a read-only account, and review the code before running anything as SYSTEM.
+> **_NOTE:_**  I tested every script for syntax, and tested the log parser and the Event Hubs de-duplication logic with sample data. The Graph scripts are read-only, but run them first in a test tenant or with a read-only account, and review the code before running anything as SYSTEM.
 
-## Protect the controller
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Intune is much more than "the tool that installs apps". It is a cloud control plane with two agents on every Windows device, a compliance signal that drives access decisions, and the power to run code as SYSTEM on the whole fleet within an hour. Build it in phases: foundations and RBAC first, report-only before enforcement, rings for everything. Open only the outbound endpoints it needs, and keep TLS inspection away from them. Send all four log categories, plus Entra sign-in and Graph activity logs, to your SIEM, and de-duplicate them. Learn where the IME and the MDM stack leave their traces, so you can tell what was pushed and whether it ran. Most importantly, protect Intune itself: PIM, phishing-resistant MFA and Multi Admin Approval turn "one stolen account wipes the company" into "one stolen account files a request that someone rejects".
 
-Intune is far more than "the tool that installs apps". It's a cloud control plane with two agents on every Windows device, a compliance signal that drives access decisions, and the power to run code as SYSTEM across the fleet within an hour. Build it in phases — foundations and RBAC first, report-only before enforcement, rings for everything. Open only the outbound endpoints it needs and keep TLS inspection away from them. Send all four log categories, plus Entra sign-in and Graph activity logs, to your SIEM, and de-duplicate them. Learn where the IME and the MDM stack leave traces, so you can tell what was pushed and whether it ran. Above all, protect Intune itself: PIM, phishing-resistant MFA and Multi Admin Approval turn "one stolen account wipes the company" into "one stolen account files a request that someone rejects".
-
-Official references: <a href="https://learn.microsoft.com/en-us/intune/" target="_blank" rel="noopener">Microsoft Intune documentation</a>, <a href="https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/intune-endpoints" target="_blank" rel="noopener">network endpoints for Intune</a>, <a href="https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/review-logs-using-azure-monitor" target="_blank" rel="noopener">routing Intune logs to Azure Monitor</a>, <a href="https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/multi-admin-approval" target="_blank" rel="noopener">Multi Admin Approval</a>, and the <a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-graph-overview" target="_blank" rel="noopener">Intune Graph API reference</a>.
+You can read more in the official documentation: <a href="https://learn.microsoft.com/en-us/intune/" target="_blank" rel="noopener">Microsoft Intune documentation</a>, <a href="https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/intune-endpoints" target="_blank" rel="noopener">network endpoints for Intune</a>, <a href="https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/review-logs-using-azure-monitor" target="_blank" rel="noopener">routing Intune logs to Azure Monitor</a>, <a href="https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/multi-admin-approval" target="_blank" rel="noopener">Multi Admin Approval</a>, and the <a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-graph-overview" target="_blank" rel="noopener">Intune Graph API reference</a>.

@@ -1,6 +1,6 @@
 ---
 title: "Hardening Microsoft 365: An Admin Checklist with PowerShell"
-excerpt: "Phished password, no MFA, a silent forwarding rule — the same Microsoft 365 compromise, again and again. The settings that stop it, the PowerShell that proves they're on, and the first 15 minutes when one gets through."
+excerpt: "In this article I would like to present the Microsoft 365 settings that stop the most common tenant compromises — identity, admin roles, email, data and logging — with the PowerShell to verify each one, and the first commands to run when a mailbox may already be compromised."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -25,12 +25,12 @@ excerpt: "Phished password, no MFA, a silent forwarding rule — the same Micros
 </svg>
 </div>
 
-Working in a SOC, I've watched the same Microsoft 365 attack play out many times. It's rarely clever: a phished password on an account without MFA, then an inbox rule that quietly forwards mail outside the company. Most of these incidents could have been stopped by settings that already exist in every tenant — someone just has to turn them on and check.
+<h3><strong>Short introduction</strong></h3>
+Working in a SOC, I have seen the same Microsoft 365 attack pattern many times. It is rarely sophisticated: a phished password on an account without MFA, followed by an inbox rule that quietly forwards emails outside the company. Most of these incidents can be prevented with settings that already exist in every tenant — they just need to be turned on and checked. In this article I would like to present the hardening checklist I use, organized in the five layers shown in the diagram above, together with the PowerShell commands that <strong>prove</strong> each setting is really on. At the end, I will share the first commands I run when a mailbox may already be compromised.
 
-Below is the checklist I use, in the five layers from the diagram above, with the PowerShell that <strong>proves</strong> each setting is really on. It ends with the commands I run first when a mailbox may already be compromised.
-
-## Connect to Microsoft 365
-First, install the PowerShell modules and connect. We will use Exchange Online PowerShell and Microsoft Graph PowerShell:
+&nbsp;
+<h3><strong>Connect to Microsoft 365</strong></h3>
+Lets start by installing the PowerShell modules and connecting. We will use Exchange Online PowerShell and Microsoft Graph PowerShell:
 
 ```powershell
 Install-Module ExchangeOnlineManagement, Microsoft.Graph -Scope CurrentUser
@@ -38,7 +38,8 @@ Connect-ExchangeOnline -UserPrincipalName admin@contoso.com
 Connect-MgGraph -Scopes "Directory.Read.All","Policy.Read.All","AuditLog.Read.All"
 ```
 
-## Layer 1 — Identity
+&nbsp;
+<h3><strong>Layer 1 — Identity</strong></h3>
 Identity is the first layer because it stops most attacks:
 
 | Control | Why |
@@ -62,7 +63,9 @@ New-AuthenticationPolicy -Name "Block Basic Auth"
 Set-OrganizationConfig -DefaultAuthenticationPolicy "Block Basic Auth"
 ```
 
-## Layer 2 — Privileged access
+&nbsp;
+<h3><strong>Layer 2 — Privileged access</strong></h3>
+
 1. **Keep 2–4 Global Admins, no more.** Everyone else gets a role with only what they need: Exchange Administrator, User Administrator, Helpdesk Administrator, Security Reader.
 2. **Use separate admin accounts**, like `admin-yousef@`, without a license or mailbox. Your daily account reads email; your admin account doesn't.
 3. **Create two break-glass accounts** — cloud-only, excluded from Conditional Access, with long random passwords stored offline, and an <strong>alert on every sign-in</strong>. They exist for the day a policy locks everyone out.
@@ -75,8 +78,9 @@ Get-MgDirectoryRoleMember -DirectoryRoleId $ga.Id |
   ForEach-Object { Get-MgUser -UserId $_.Id | Select-Object DisplayName, UserPrincipalName }
 ```
 
-## Layer 3 — Email
-Next, close the most common way data leaves a compromised mailbox — automatic forwarding — and set up email authentication for the domain:
+&nbsp;
+<h3><strong>Layer 3 — Email</strong></h3>
+In this section we will close the most common way data leaves a compromised mailbox — automatic forwarding — and set up email authentication for the domain:
 
 ```powershell
 # Block automatic forwarding to external addresses
@@ -93,14 +97,17 @@ contoso.com.          TXT  "v=spf1 include:spf.protection.outlook.com -all"
 _dmarc.contoso.com.   TXT  "v=DMARC1; p=quarantine; rua=mailto:dmarc@contoso.com; pct=100"
 ```
 
-> **Go slow on DMARC:** Start DMARC with `p=none` and read the reports for a few weeks. Fix every legitimate sender that fails, then move to `quarantine`, and finally to `reject`. Going directly to `reject` can block your own invoices or newsletters.
+> **_NOTE:_**  Start DMARC with `p=none` and read the reports for a few weeks. Fix every legitimate sender that fails, then move to `quarantine`, and finally to `reject`. Going directly to `reject` can block your own invoices or newsletters.
 
-## Layer 4 — Data
+&nbsp;
+<h3><strong>Layer 4 — Data</strong></h3>
+
 1. **SharePoint and OneDrive sharing:** allow "New and existing guests" at most, never "Anyone" links by default, and set an expiry for anonymous links.
 2. **Data Loss Prevention (DLP)** policies for the data you really have (national IDs, card numbers, financial data). Start in test mode, review the matches, then enforce.
 3. **Sensitivity labels**, so "Confidential" stays with the file wherever it goes, not with the folder it is in.
 
-## Layer 5 — Logging: verify, don't assume
+&nbsp;
+<h3><strong>Layer 5 — Logging: verify, don't assume</strong></h3>
 This layer doesn't stop attacks, but without it there is nothing to investigate when the other layers fail:
 
 ```powershell
@@ -114,7 +121,8 @@ Get-OrganizationConfig | Format-List AuditDisabled
 
 After that, check the <strong>Microsoft Secure Score</strong> every month. It is a prioritized to-do list generated from your real tenant configuration — treat every recommendation as a ticket.
 
-## When a mailbox may be compromised: the first 15 minutes
+&nbsp;
+<h3><strong>When a mailbox may be compromised: the first 15 minutes</strong></h3>
 This is the business email compromise (BEC) triage I run first, in this order:
 
 ```powershell
@@ -145,8 +153,8 @@ Attackers like rules that move emails to a hidden folder like "RSS Feeds" and ma
 4. Check that the attacker didn't add their own MFA method.
 5. Review the sent items for phishing emails sent to colleagues.
 
-> **Order matters:** If you reset the password but don't revoke the sessions, the attacker's existing tokens keep working.
+> **_NOTE:_**  The order matters. If you reset the password but don't revoke the sessions, the attacker's existing tokens keep working.
 
-## The short list
-
-Most Microsoft 365 compromises are stopped by a short list: MFA for everyone, legacy authentication blocked, few and separate admin accounts, external forwarding off, SPF/DKIM/DMARC published, sharing limited and auditing confirmed on. Keep the triage commands somewhere you can find them at 2 a.m. — the day something gets through, you'll need them. Microsoft's <a href="https://docs.microsoft.com/en-us/microsoft-365/security/" target="_blank" rel="noopener">Microsoft 365 security documentation</a> has the details.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Most Microsoft 365 compromises are stopped by a short list of settings: MFA for everyone, legacy authentication blocked, few and separate admin accounts, external forwarding blocked, SPF/DKIM/DMARC published, sharing limited, and auditing confirmed on. Keep the triage commands somewhere you can find them at 2 a.m. — you will need them on the day something gets through. You can read more in the official <a href="https://docs.microsoft.com/en-us/microsoft-365/security/" target="_blank" rel="noopener">Microsoft 365 security documentation</a>.

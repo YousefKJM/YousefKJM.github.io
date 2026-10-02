@@ -1,6 +1,6 @@
 ---
 title: "Hosting a Web App on Azure App Service Using the Azure CLI"
-excerpt: "Portal clicks don't scale. The same App Service setup — plan, config, deployment, security and zero-downtime slots — as a handful of Azure CLI commands you can save and rerun in minutes."
+excerpt: "In this article I would like to present how to host a web application on Azure App Service from start to finish using only the Azure CLI — resource group, plan, configuration, deployment, security settings and zero-downtime releases with deployment slots."
 header:
   image: /images/posts/article2/adevops26.png
 ---
@@ -29,17 +29,18 @@ header:
 </svg>
 </div>
 
-In my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/) we deployed to App Service through the portal and a release pipeline. The portal is great for learning. It's terrible for repeating the same setup across dev, test and prod without missing a checkbox.
+<h3><strong>Short introduction</strong></h3>
+In my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/) we deployed a web app to Azure App Service through the Azure portal and a release pipeline. The portal is great for learning, but clicking through the same screens for every environment gets slow and it is hard to repeat exactly. During my time as an Azure App Developer, I started doing the same setup with the <strong>Azure CLI</strong> instead: every step is one command, so the whole setup can be saved as a script and run again in minutes. In this article I would like to present this setup step by step, and show where each command matches what we did in the portal before.
 
-As an Azure App Developer I switched to doing it with the <strong>Azure CLI</strong>: every step is one command, the whole thing lives in a script, and a new environment takes minutes. Below is that script, step by step, with pointers to where each command matches what we clicked in the portal.
-
-## One concept before we start
+&nbsp;
+<h3><strong>One concept before we start</strong></h3>
 The diagram at the top of this article shows how App Service resources are organized. The most important thing to understand is that you pay for the <strong>App Service plan</strong>, not for the app. The plan is the compute (CPU and RAM), and several apps can share one plan. That is cheap for development, but risky in production if one app uses all the resources.
 
 Also notice that everything is inside one <strong>resource group</strong>. Deleting the resource group deletes everything in it, which makes cleaning up very easy.
 
-## Step 1 — Login and set variables
-First, log in and pick the subscription. I like to keep all names in variables so the rest of the commands can be copied without changes:
+&nbsp;
+<h3><strong>Step 1 — Login and set variables</strong></h3>
+Lets start by logging in and choosing the subscription. I like to keep all names in variables so the rest of the commands can be copied without changes:
 
 ```bash
 az login
@@ -51,7 +52,9 @@ PLAN=plan-myapp-prod
 APP=myapp-$RANDOM     # must be globally unique, it becomes $APP.azurewebsites.net
 ```
 
-## Step 2 — Resource group and App Service plan
+&nbsp;
+<h3><strong>Step 2 — Resource group and App Service plan</strong></h3>
+
 ```bash
 az group create -n $RG -l $LOC
 az appservice plan create -g $RG -n $PLAN --is-linux --sku S1
@@ -70,9 +73,10 @@ Choose the pricing tier carefully:
 | S1 | Small production | **Deployment slots**, autoscale, daily backups |
 | P1v3 | Real production | Faster CPUs, VNet integration, more slots |
 
-> **Heads-up:** As I mentioned in the DevOps article, deployment slots need the <strong>S1 tier or higher</strong>. We will use them at the end of this article.
+> **_NOTE:_**  As I mentioned in the DevOps article, deployment slots need the <strong>S1 tier or higher</strong>. We will use them at the end of this article.
 
-## Step 3 — Create the web app
+&nbsp;
+<h3><strong>Step 3 — Create the web app</strong></h3>
 First check which runtimes are available, then create the app:
 
 ```bash
@@ -82,7 +86,8 @@ az webapp create -g $RG -p $PLAN -n $APP --runtime "PYTHON|3.8"
 # or: --runtime "NODE|14-lts"   or   --runtime "DOTNETCORE|5.0"
 ```
 
-## Step 4 — Configure before you deploy
+&nbsp;
+<h3><strong>Step 4 — Configure before you deploy</strong></h3>
 App settings become <strong>environment variables</strong> inside the app, so secrets never need to be in the code:
 
 ```bash
@@ -96,7 +101,8 @@ az webapp config set -g $RG -n $APP \
   --startup-file "gunicorn --bind=0.0.0.0 --timeout 600 core.wsgi"
 ```
 
-## Step 5 — Deploy
+&nbsp;
+<h3><strong>Step 5 — Deploy</strong></h3>
 There are three common ways to deploy, from the quickest to the most professional:
 
 ```bash
@@ -115,7 +121,8 @@ az webapp deployment list-publishing-profiles -g $RG -n $APP --xml > profile.xml
 
 For anything you will maintain, use option C — the release pipeline from my DevOps article is exactly this.
 
-## Step 6 — Lock it down
+&nbsp;
+<h3><strong>Step 6 — Lock it down</strong></h3>
 A new App Service is not as secure as it could be by default. These commands fix the most important settings:
 
 ```bash
@@ -130,16 +137,19 @@ az webapp identity assign -g $RG -n $APP     # managed identity, e.g. for Key Va
 3. **Always On** keeps the app loaded, otherwise the first request after idle time is slow.
 4. **Managed identity** lets the app access other Azure resources without storing credentials.
 
-## Step 7 — Watch the logs
+&nbsp;
+<h3><strong>Step 7 — Watch the logs</strong></h3>
+
 ```bash
 az webapp log config -g $RG -n $APP --application-logging filesystem --level information
 az webapp log tail -g $RG -n $APP
 ```
 
-## Zero-downtime releases with deployment slots
+&nbsp;
+<h3><strong>Zero-downtime releases with deployment slots</strong></h3>
 In the DevOps article we created a "demo" slot from the portal. This is how it looked after creating the web app — only the production slot exists:
 
-![Deployment slots in the Azure portal](/images/posts/article2/adevops26.png)
+<img src="/images/posts/article2/adevops26.png" alt="Deployment slots in the Azure portal" style="margin-inline:auto;" />
 
 And this was the "Add a slot" panel:
 
@@ -155,15 +165,16 @@ az webapp deployment slot swap -g $RG -n $APP --slot staging --target-slot produ
 
 The swap warms up the staging instance first and then switches the routing, so users don't see downtime. If something is wrong, run the same swap command again to go back.
 
-> **Easy to miss:** Mark connection strings as <strong>slot settings</strong>, so they stay with the slot during a swap. Otherwise the staging code can end up connected to the production database.
+> **_NOTE:_**  Mark connection strings as <strong>slot settings</strong>, so they stay with the slot during a swap. Otherwise the staging code can end up connected to the production database.
 
-## Clean up
+&nbsp;
+<h3><strong>Clean up</strong></h3>
 When you are done testing, one command deletes everything and stops the billing:
 
 ```bash
 az group delete -n $RG --yes --no-wait
 ```
 
-## Before you ship it
-
-Everything we clicked through in the DevOps article fits in a few CLI commands, and once they're scripted a new environment is a matter of minutes. Keep the essentials in mind: you pay for the plan, slots need S1 or higher, HTTPS-only on, FTP off, and slots for every release. The official <a href="https://docs.microsoft.com/en-us/azure/app-service/" target="_blank" rel="noopener">App Service documentation</a> covers the rest.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Everything we did in the portal in the DevOps article can be done with a few Azure CLI commands, and once they are in a script, creating a new environment takes minutes instead of an hour of clicking. Remember the important points: you pay for the plan, S1 is needed for slots, turn on HTTPS-only and disable FTP, and use slots to release without downtime. You can read more in the official <a href="https://docs.microsoft.com/en-us/azure/app-service/" target="_blank" rel="noopener">App Service documentation</a>.

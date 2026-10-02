@@ -1,37 +1,40 @@
 ---
 title: "Building a Deep Neural Network Speech Recognizer"
-excerpt: "Raw audio in, English text out — no pronunciation dictionary. Spectrograms, seven CNN/RNN architectures, CTC loss, and the training curves that showed why my \"final\" model lost to a simpler one."
+excerpt: "In this article I would like to present the end-to-end speech recognizer I built with Keras — turning audio into spectrograms, training seven CNN and RNN architectures with CTC loss, and what the real training curves showed, including why my 'final' model lost to a simpler one."
 header:
   image: /images/posts/speech-recognizer/pipeline.png
 ---
 
-![Speech recognition pipeline](/images/posts/speech-recognizer/pipeline.png)
+<p align="center">
+<img src="/images/posts/speech-recognizer/pipeline.png" alt="Speech recognition pipeline" style="margin-inline:auto;"/>
+</p>
 
-Speech recognition wasn't new to me: my team's project <em>Mon9et</em> used it to help users check their Quran recitation. But there we leaned on existing speech-to-text tools. This time I wanted to build the acoustic model myself — a deep network that takes raw audio and outputs English text, with no hand-made pronunciation dictionary in between.
+<h3><strong>Short introduction</strong></h3>
+Speech recognition was not new to me: my team's project <em>Mon9et</em> used it to help users check their Quran recitation. But there we used existing speech-to-text tools. For this individual project I wanted to build the acoustic model myself — a deep neural network that takes raw audio and outputs English text, without any hand-made pronunciation dictionary. In this article I would like to walk you through the pipeline step by step, from audio features to CTC loss, and share the real training results of seven architectures. The code and trained models are on <a href="https://github.com/YousefKJM/P3-DNN-Speech-Recognizer" target="_blank" rel="noopener">GitHub</a>.
 
-Below is the pipeline from audio features to CTC loss, plus the real training results of seven architectures. Code and trained models are on <a href="https://github.com/YousefKJM/P3-DNN-Speech-Recognizer" target="_blank" rel="noopener">GitHub</a>.
+&nbsp;
+<h3><strong>Step 1 — Turn audio into features</strong></h3>
+The picture at the top shows the full pipeline: audio → features → acoustic model → text. Lets start from the audio itself. This is one training example from the dataset — a few seconds of someone reading a sentence:
 
-## Step 1 — Turn audio into features
-The picture at the top shows the full pipeline: audio → features → acoustic model → text. It starts with the audio itself. This is one training example from the dataset — a few seconds of someone reading a sentence:
-
-![Raw audio signal](/images/posts/speech-recognizer/audio-signal.png)
+<img src="/images/posts/speech-recognizer/audio-signal.png" alt="Raw audio signal" style="margin-inline:auto;" />
 
 A neural network can't do much with 16,000 raw numbers per second, so we convert the audio into features. There are two common options. The first is the <strong>spectrogram</strong>, which shows the energy at each frequency over short time windows:
 
-![Normalized spectrogram](/images/posts/speech-recognizer/spectrogram.png)
+<img src="/images/posts/speech-recognizer/spectrogram.png" alt="Normalized spectrogram" style="margin-inline:auto;" />
 
 The second is <strong>MFCC</strong> (mel-frequency cepstral coefficients), a compressed version of the spectrogram based on how humans hear pitch:
 
-![MFCC features](/images/posts/speech-recognizer/mfcc.png)
+<img src="/images/posts/speech-recognizer/mfcc.png" alt="MFCC features" style="margin-inline:auto;" />
 
 | Feature | Values per time step | Trade-off |
 |---|---|---|
 | Spectrogram | 161 | Keeps all the information, bigger input |
 | MFCC | 13 | Compact, removes some noise but also some signal |
 
-All the results here use spectrograms. Notice that the spectrogram is <strong>normalized</strong> (values around zero) — without that, training converges much more slowly.
+All the results in this article use spectrograms. Notice that the spectrogram is <strong>normalized</strong> (values around zero) — without that, training converges much more slowly.
 
-## Step 2 — CTC loss: the trick that makes it possible
+&nbsp;
+<h3><strong>Step 2 — CTC loss: the trick that makes it possible</strong></h3>
 The training data tells us "this 3-second clip says <em>her father is a most remarkable person</em>", but it does not tell us which audio frame belongs to which letter. Labelling that by hand would be impossible.
 
 <strong>Connectionist Temporal Classification (CTC)</strong> solves this problem. The model outputs a probability for each character at <strong>every</strong> time step — 28 characters plus a special <strong>blank</strong> symbol, 29 in total. CTC adds up the probabilities of all frame-level alignments that collapse into the correct text:
@@ -51,10 +54,11 @@ def ctc_lambda(args):
     return K.ctc_batch_cost(labels, y_pred, input_len, label_len)
 ```
 
-## Step 3 — Seven architectures
-Here are the models I trained, from the simplest to the most complex. For example, this is the CNN + RNN model, where a 1D convolution extracts local sound patterns before the recurrent layer:
+&nbsp;
+<h3><strong>Step 3 — Seven architectures</strong></h3>
+In this section we will go through the models I trained, from the simplest to the most complex. For example, this is the CNN + RNN model, where a 1D convolution extracts local sound patterns before the recurrent layer:
 
-![CNN + RNN model](/images/posts/speech-recognizer/cnn_rnn_model.png)
+<img src="/images/posts/speech-recognizer/cnn_rnn_model.png" alt="CNN + RNN model" style="margin-inline:auto;" />
 
 And this is the bidirectional RNN, which reads the audio forward and backward:
 
@@ -62,7 +66,7 @@ And this is the bidirectional RNN, which reads the audio forward and backward:
 
 These are the real training (left) and validation (right) CTC losses from my notebook, for 20 epochs (model 0 is left out because its loss stayed around 760 and would squash the chart):
 
-![Training and validation loss of models 1 to 5](/images/posts/speech-recognizer/training-curves.png)
+<img src="/images/posts/speech-recognizer/training-curves.png" alt="Training and validation loss of models 1 to 5" style="margin-inline:auto;" />
 
 And the final validation loss of every model, including the final one:
 
@@ -99,7 +103,8 @@ And the final validation loss of every model, including the final one:
 | 4 | Bidirectional GRU (no CNN) | Context from both directions, but on its own it trained slower |
 | 5 | **Conv1D + bidirectional GRU** | **136** — local features from the CNN plus two-way context. The best model, clearly |
 
-## Step 4 — Why my final model lost
+&nbsp;
+<h3><strong>Step 4 — Why my final model lost</strong></h3>
 For the final model I combined everything and went bigger, with regularization everywhere:
 
 ```python
@@ -121,9 +126,10 @@ After <strong>40 epochs</strong> — double the training of the others — its v
 2. **Stride 1 kept the full sequence length.** Models 2 and 5 used stride 2, so the recurrent layers had half as many time steps. Three bidirectional LSTMs over the full sequence is a much harder optimization problem.
 3. **Deeper is not automatically better.** Model 3 already showed that stacking recurrent layers started to overfit.
 
-> **Rule of thumb:** The general rule: <strong>diagnose before you regularize.</strong> If training loss is much lower than validation loss, the model overfits → add dropout or more data. If both are similar and high, the model is under-trained or the optimization is too hard → train longer, simplify, or add capacity. Adding regularization to a model without a gap makes it worse.
+> **_NOTE:_**  The general rule: <strong>diagnose before you regularize.</strong> If training loss is much lower than validation loss, the model overfits → add dropout or more data. If both are similar and high, the model is under-trained or the optimization is too hard → train longer, simplify, or add capacity. Adding regularization to a model without a gap makes it worse.
 
-## Step 5 — From probabilities to text
+&nbsp;
+<h3><strong>Step 5 — From probabilities to text</strong></h3>
 At prediction time, the simplest decoder takes the most likely symbol at each time step, merges repeats and removes blanks:
 
 ```python
@@ -139,6 +145,6 @@ def greedy_ctc_decode(probs, index_map):
 
 Real systems add <strong>beam search</strong> and a <strong>language model</strong> on top. "Recognize speech" and "wreck a nice beach" sound almost the same — only a language model knows which one people actually say.
 
-## Bigger isn't always better
-
-End-to-end speech recognition comes down to good features (normalized spectrograms), the right architecture (a CNN for local patterns plus a bidirectional RNN for context) and CTC loss, which lets you train without frame-level labels. The training curves added one more lesson: the best model is not always the last or the biggest. Model 5 beat my "final" model, and the train/validation gap explained why. Notebook and models are on <a href="https://github.com/YousefKJM/P3-DNN-Speech-Recognizer" target="_blank" rel="noopener">GitHub</a>; pipeline and architecture diagrams come from Udacity's project template (MIT licence).
+&nbsp;
+<h3><strong>Summary</strong></h3>
+End-to-end speech recognition comes down to good features (normalized spectrograms), the right architecture (a CNN for local patterns plus a bidirectional RNN for context) and CTC loss, which makes it possible to train on audio without frame-level labels. The training curves also taught me that the best model is not always the last or the biggest one: model 5 beat my "final" model, and reading the train/validation gap explained why. The full notebook and models are on <a href="https://github.com/YousefKJM/P3-DNN-Speech-Recognizer" target="_blank" rel="noopener">GitHub</a>; the pipeline and architecture diagrams come from the project template provided by Udacity (MIT licence).

@@ -1,6 +1,6 @@
 ---
 title: "Writing an Assembler and Simulator for Our Custom CPU in Java"
-excerpt: "Hand-assembling hex for a homemade CPU gets old fast. So I wrote a two-pass assembler and a simulator in Java — here's how labels get resolved, how instructions become bits, and how the same code doubles as a reference CPU."
+excerpt: "In this article I would like to present the assembler and simulator I wrote for our pipelined processor — how a two-pass assembler resolves labels, how instructions become bits, and how the same code runs as a simulator to check the hardware."
 header:
   image: /images/posts/assembler-simulator/simulator-result.png
 ---
@@ -9,12 +9,12 @@ header:
 <img src="/images/posts/assembler-simulator/assembler-input.png" alt="ICS233 Project Assembler" width="532" style="margin-inline:auto;"/>
 </p>
 
-Our [pipelined processor](/Building-a-Pipelined-RISC-Processor/) worked — but testing it meant translating every program by hand into 16-bit hex and loading it into instruction memory. One wrong bit, and you spend an hour debugging the CPU when the real bug is in your own arithmetic.
+<h3><strong>Short introduction</strong></h3>
+In my <a href="/Building-a-Pipelined-RISC-Processor/">previous article</a> I presented the 32-bit pipelined processor my team built in Logisim. To test it, every program had to be translated by hand into 16-bit hexadecimal instructions and loaded into the instruction memory. One wrong bit, and you spend an hour debugging the CPU when the real problem is a typo in your own arithmetic. So as a bonus part of the project, I wrote an <strong>assembler and simulator</strong> in Java with a Swing user interface. In this article I would like to explain how it works, so you can build one for your own instruction set. The code is available on <a href="https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor" target="_blank" rel="noopener">GitHub</a>.
 
-So, as a bonus part of the project, I wrote an <strong>assembler and simulator</strong> in Java with a Swing interface. The ideas are small enough to reuse for any custom instruction set, and the code is on <a href="https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor" target="_blank" rel="noopener">GitHub</a>.
-
-## How the tool works
-Before the code, the big picture:
+&nbsp;
+<h3><strong>How the tool works</strong></h3>
+Before going into the code, lets look at the big picture:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 200" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Tool flow: assembly source goes through pass one parsing to build a label map and instruction list, pass two encoding to produce hex, which loads into the Logisim CPU; the simulator decodes the same hex and executes it in software">
@@ -45,7 +45,8 @@ Before the code, the big picture:
 
 The assembler reads the source program in two passes and produces a hex image that can be loaded directly into the Logisim CPU. The simulator then decodes the same hex and runs it in software. That last part is the most useful one: the simulator is a <strong>reference</strong>. If you run the same program in Logisim and in the simulator and a register is different, you know the bug is in the hardware.
 
-## Using the assembler
+&nbsp;
+<h3><strong>Using the assembler</strong></h3>
 The screenshot at the top of this article shows the main window with a small program loaded. It counts how many bits are set to 1 in the value stored at memory address 0:
 
 ```
@@ -68,7 +69,8 @@ You can type the program or click "Load an Assembly File". Once you click "Assem
 
 The first box shows the generated machine code in Logisim's memory image format (`v2.0 raw`), ready to load into the instruction memory. The table shows the registers after the program finished. The tool preloads `memory[0] = 5`, which is `101` in binary, so the expected result is two 1-bits — and as you can see, `Regfile[2] = 2`.
 
-## Pass 1: parse and record labels
+&nbsp;
+<h3><strong>Pass 1: parse and record labels</strong></h3>
 Why two passes? Look at the branch `bnez $1, Next`. In this example `Next` is above the branch, but a forward branch like `beqz $5, EndLoop` refers to a label we haven't seen yet. So the first pass walks through the whole file and records <strong>where every label is</strong>. Then the second pass can resolve any reference:
 
 ```java
@@ -99,7 +101,8 @@ while (scanner.hasNext()) {
 
 Notice the <strong>two counters</strong>. `lineNo` counts every source line, so error messages point to the correct line in the editor. `stepNo` counts only instructions, because that is the address a label really refers to.
 
-## Pass 2: instructions become bits
+&nbsp;
+<h3><strong>Pass 2: instructions become bits</strong></h3>
 Every instruction is an enum entry that knows its opcode (and function code for R-type). Encoding is just joining fixed-width binary fields:
 
 ```java
@@ -122,7 +125,8 @@ The expression `labelMap.get(target) - stepNo` is where labels are resolved. Bra
 
 `Next` is instruction 2 and `bnez` is instruction 5, so the offset is 2 − 5 = −3, stored in two's complement as `11111101`. Also notice that in assembly the order is `rd, rs, rt`, but in the bits it is `rs, rt, rd` — exactly the kind of detail that is easy to get wrong by hand and impossible to get wrong once the code is correct.
 
-## The simulator
+&nbsp;
+<h3><strong>The simulator</strong></h3>
 Here is the nice part: each `Instruction` object also knows how to <strong>run itself</strong> on a register file and memory, and returns the next PC:
 
 ```java
@@ -155,9 +159,10 @@ public void run() {
 }
 ```
 
-> **By design:** The simulator is not cycle-accurate — it doesn't simulate the pipeline. That is on purpose. It shows what the program <em>should</em> compute, which is exactly what you want when you are checking a pipeline that may compute it wrong.
+> **_NOTE:_**  The simulator is not cycle-accurate — it doesn't simulate the pipeline. That is on purpose. It shows what the program <em>should</em> compute, which is exactly what you want when you are checking a pipeline that may compute it wrong.
 
-## Error messages
+&nbsp;
+<h3><strong>Error messages</strong></h3>
 Students (including me) write broken assembly all the time, so good error messages matter more than anything else in a tool like this. Each kind of problem has its own exception with the line number. For example, if I forget an argument in an `add` instruction:
 
 <img src="/images/posts/assembler-simulator/assembler-error.png" alt="Assembler showing a syntax error" width="532" style="margin-inline:auto;" />
@@ -171,6 +176,6 @@ The full message is: <em>"Syntax Error: Invalid argument (Too few arguments; 3 a
 | `LabelNotFoundException` | A jump to a label that was never defined |
 | `InvalidInstructionException` | Hex that doesn't decode to any instruction (simulator side) |
 
-## What it comes down to
-
-An assembler sounds like a big project, but for a small instruction set it boils down to a few ideas: one enum entry per instruction, a first pass that records labels, a second pass that joins binary fields, and separate counters for source lines and addresses. Make the instructions executable and you get a simulator almost for free — a reference you can trust when the hardware misbehaves. Start from your instruction table and check your first encodings by hand, like the table above. Source code and sample programs are on <a href="https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor" target="_blank" rel="noopener">GitHub</a>.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+An assembler sounds like a big project, but for a small instruction set it comes down to a few ideas: an enum entry per instruction, a first pass that records labels, a second pass that joins binary fields, and separate counters for source lines and addresses. Make the instructions executable, and you get a simulator almost for free — a reference you can trust when the hardware doesn't behave. If you want to build one, start from your instruction set table and check your first encodings by hand, like the table above. The full source code and sample programs are on <a href="https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor" target="_blank" rel="noopener">GitHub</a>.

@@ -1,6 +1,6 @@
 ---
 title: "IaaS, PaaS, SaaS and Serverless: Choosing the Right Cloud Model"
-excerpt: "IaaS, PaaS, SaaS, serverless — the real difference is one question: how much of the stack do you still want to patch yourself? A decision map from my AZ-900 notes, with real Azure services for each model."
+excerpt: "In this article I would like to explain the cloud service models — IaaS, PaaS, SaaS and serverless — who manages what in each one, and a simple way to choose between them, based on my notes while preparing for the AZ-900 exam."
 ---
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
@@ -41,11 +41,11 @@ excerpt: "IaaS, PaaS, SaaS, serverless — the real difference is one question: 
 </svg>
 </div>
 
-When I prepared for <strong>AZ-900 (Microsoft Azure Fundamentals)</strong> while working as an Azure App Developer at Microsoft, the exam covered a lot of ground. But one idea kept coming back: when you move to the cloud, <strong>how much of the stack do you still want to manage yourself?</strong>
+<h3><strong>Short introduction</strong></h3>
+While working as an Azure App Developer at Microsoft, I prepared for the <strong>AZ-900 (Microsoft Azure Fundamentals)</strong> certification. The exam material covers a lot of topics, but the most important idea is actually simple: when you move to the cloud, <strong>how much of the stack do you still want to manage yourself?</strong> The answer to that question is the difference between IaaS, PaaS, SaaS and serverless. In this article I would like to explain these models with real Azure services, and share a simple flow I use to choose between them.
 
-Answer that, and the alphabet soup — IaaS, PaaS, SaaS, serverless — sorts itself out. Here is how I map each model to real Azure services, and the quick flow I use to pick one.
-
-## Who manages what
+&nbsp;
+<h3><strong>Who manages what</strong></h3>
 The diagram at the top of this article shows the full stack, from the physical datacenter up to your data. The highlighted (teal) part is what you manage; the rest is managed by the cloud provider:
 
 - **On-premises** — you manage everything, from the building to the application.
@@ -53,10 +53,11 @@ The diagram at the top of this article shows the full stack, from the physical d
 - **PaaS (Platform as a Service)** — the provider also manages the OS and runtime. You deploy your code and configure it.
 - **SaaS (Software as a Service)** — the provider runs the whole application. You only manage your data and who has access to it.
 
-> **Don't miss this:** Look at the top row again. In <strong>every</strong> model, even SaaS, your data and access are your responsibility. This is the "shared responsibility model", and it explains why most cloud security incidents are not the provider failing — they are a public storage container, an over-permissioned account, or a missing MFA policy on the customer side.
+> **_NOTE:_**  Look at the top row again. In <strong>every</strong> model, even SaaS, your data and access are your responsibility. This is the "shared responsibility model", and it explains why most cloud security incidents are not the provider failing — they are a public storage container, an over-permissioned account, or a missing MFA policy on the customer side.
 
-## The same app, four ways
-To make it concrete, take one task — hosting a web application — and see how it looks in each model on Azure:
+&nbsp;
+<h3><strong>The same app, four ways</strong></h3>
+To make it concrete, lets take one task — hosting a web application — and see how it looks in each model on Azure:
 
 | Model | Azure service | You do | Azure does |
 |---|---|---|---|
@@ -67,8 +68,9 @@ To make it concrete, take one task — hosting a web application — and see how
 
 If you followed my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/), the web app there used the PaaS model: we only deployed code to App Service and never touched a server.
 
-## How to choose
-This is the flow I use. Start at the top and stop at the first "yes":
+&nbsp;
+<h3><strong>How to choose</strong></h3>
+In this section I want to share the flow I use. Start at the top, and stop at the first "yes":
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 330" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Decision flow: if an off-the-shelf product solves it choose SaaS; if you need OS-level control choose IaaS; if the workload is event-driven and short choose serverless; if it is long-running choose containers; otherwise choose PaaS">
@@ -119,7 +121,8 @@ This is the flow I use. Start at the top and stop at the first "yes":
 
 The order matters. It always pushes you to the <strong>most managed</strong> option that still fits, which is almost always the cheapest one to operate.
 
-## Cloud terms you will hear all the time
+&nbsp;
+<h3><strong>Cloud terms you will hear all the time</strong></h3>
 These terms come up in AZ-900 and in every cloud discussion afterwards:
 
 | Term | Meaning |
@@ -138,6 +141,6 @@ And the three deployment models, in one line each:
 - **Private cloud** — dedicated infrastructure, run by you (on-premises or hosted).
 - **Hybrid cloud** — both connected together (for example with VPN Gateway, ExpressRoute or Azure Arc). This is where most enterprises really are.
 
-## The 2 a.m. test
-
-Choosing a cloud model really comes down to one question: what are you willing to patch at 2 a.m.? If the answer is nothing, go SaaS or serverless. If it's only your code, PaaS. If you genuinely need the operating system, take IaaS and the work that comes with it. Preparing for AZ-900 yourself? The official <a href="https://docs.microsoft.com/en-us/learn/certifications/azure-fundamentals/" target="_blank" rel="noopener">Azure Fundamentals page</a> links to free Microsoft Learn paths that cover all of this.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Choosing a cloud model comes down to one question: what are you willing to patch at 2 a.m.? If the answer is nothing, go with SaaS or serverless. If it is only your code, go with PaaS. If you really need the operating system, take IaaS and the work that comes with it. If you are preparing for AZ-900 too, the official <a href="https://docs.microsoft.com/en-us/learn/certifications/azure-fundamentals/" target="_blank" rel="noopener">Azure Fundamentals page</a> links to free Microsoft Learn paths that cover all of these concepts and is a great place to start.
