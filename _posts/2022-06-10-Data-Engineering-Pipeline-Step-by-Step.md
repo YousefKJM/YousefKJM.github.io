@@ -47,10 +47,10 @@ Most data work isn't modelling — it's getting data into a state where anyone c
 import pandas as pd
 from datetime import datetime, timezone
 
-raw = pd.read_csv("exports/orders_2022-07.csv", dtype=str)   # read EVERYTHING as text first
+raw = pd.read_csv("exports/orders_2022-05.csv", dtype=str)   # read EVERYTHING as text first
 raw["_loaded_at"]  = datetime.now(timezone.utc).isoformat()
-raw["_source_file"] = "orders_2022-07.csv"
-raw.to_parquet("bronze/orders/2022-07.parquet", index=False)
+raw["_source_file"] = "orders_2022-05.csv"
+raw.to_parquet("bronze/orders/2022-05.parquet", index=False)
 ```
 
 `dtype=str` is deliberate: if pandas guesses types, a product code like `007` becomes the integer `7` before you ever see it.
@@ -78,7 +78,7 @@ def validate(df):
 ## Step 3 — Clean into silver
 
 ```python
-df = pd.read_parquet("bronze/orders/2022-07.parquet")
+df = pd.read_parquet("bronze/orders/2022-05.parquet")
 
 df = (df
       .rename(columns=str.lower)
@@ -90,7 +90,7 @@ df = (df
       .dropna(subset=["order_id", "order_date"])
       .drop_duplicates(subset="order_id", keep="last"))     # latest version of each order wins
 
-df.to_parquet("silver/orders/2022-07.parquet", index=False)
+df.to_parquet("silver/orders/2022-05.parquet", index=False)
 ```
 
 Cleaning rules that pay off every time:
@@ -173,7 +173,7 @@ def test_gold(con):
     assert q("SELECT COUNT(*) - COUNT(DISTINCT order_id) FROM silver_orders") == 0, "duplicate keys"
     assert q("SELECT COUNT(*) FROM silver_orders WHERE amount IS NULL") == 0, "null amounts"
     # Reconciliation: does the total still match the source file?
-    src_total = pd.to_numeric(pd.read_parquet("bronze/orders/2022-07.parquet")["amount"], errors="coerce").sum()
+    src_total = pd.to_numeric(pd.read_parquet("bronze/orders/2022-05.parquet")["amount"], errors="coerce").sum()
     assert abs(q("SELECT SUM(amount) FROM silver_orders") - src_total) < 0.01, "totals drifted"
 ```
 

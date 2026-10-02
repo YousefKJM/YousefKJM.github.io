@@ -151,6 +151,6 @@ Cost: `O(n × T²)` — linear in sentence length. For 20 words and 12 tags that
 | Only looks one tag back | Bigram Markov assumption | Trigram HMMs, then BiLSTMs |
 | Words are atomic symbols | "run"/"running" share nothing | Word embeddings |
 
-## Why it's worth knowing in 2022
+## Why it's worth knowing in 2021
 
 The same three moves — **hidden states, transition scores, dynamic-programming decode** — power CTC decoding in [speech recognition](/Building-a-Deep-Speech-Recognizer-CNN-RNN-CTC/) and beam search in [machine translation](/Neural-Machine-Translation-with-RNNs/). Learn Viterbi once and you'll recognize it everywhere.
