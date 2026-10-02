@@ -1,9 +1,7 @@
 ---
-title: "Full Stack, End to End: What Actually Happens When a User Clicks 'Save'"
-excerpt: "One click, traced through every layer — browser, DNS, TLS, load balancer, API, database and back — with what can go wrong at each hop and the one tool that tells you which hop it was."
+title: "What Happens When a User Clicks Save: The Full-Stack Request Lifecycle"
+excerpt: "In this article I would like to follow a single click through every layer of a web application — browser, DNS, TLS, load balancer, web server, application and database — and show what can go wrong at each step and how to find it quickly."
 ---
-
-"Full stack" means owning a request from the click to the database row and back. When something's slow or broken, the skill isn't knowing every framework — it's knowing **which hop** to look at. Here's the whole path.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 470" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Request lifecycle in eight hops: browser event, DNS lookup, TCP and TLS handshake, CDN or load balancer, web server, application code, database, then response rendered back in the browser">
@@ -29,55 +27,76 @@ excerpt: "One click, traced through every layer — browser, DNS, TLS, load bala
 </svg>
 </div>
 
-## Each hop: what breaks, and how you'd know
+<h3><strong>Short introduction</strong></h3>
+In my last two articles we built a [Vue 3 frontend](/Vue-3-Composition-API-Cheat-Sheet/) and a [Django REST API](/Django-REST-API-in-10-Steps/). Being a full-stack developer means owning everything in between as well — the whole path from a user's click to a row in the database and back. In my web development work, I learned that when something is slow or broken, the important skill is not knowing every framework, but knowing <strong>which step</strong> of that path to look at. In this article I would like to follow one click through all of these steps, shown in the diagram above, and explain how to find the problem at each one.
 
-| Hop | Typical failure | Symptom | First tool to reach for |
+&nbsp;
+<h3><strong>The eight steps of a request</strong></h3>
+Lets follow what happens when a user clicks "Save" on a form:
+
+1. **Browser** — a JavaScript click handler sends `fetch('/api/items', {method: 'POST'})`.
+2. **DNS** — the browser converts `api.example.com` to an IP address, checking the browser, OS and resolver caches.
+3. **TCP and TLS** — the connection is opened, the certificate is checked and encryption keys are agreed.
+4. **CDN / load balancer** — TLS often ends here, and a healthy backend server is chosen.
+5. **Web server** — nginx or IIS forwards the request to the application server (gunicorn, Node, Kestrel).
+6. **Application** — routing, authentication, validation and business logic run.
+7. **Database** — a connection from the pool runs the query and commits the transaction.
+8. **Back up the stack** — the JSON response returns to the browser, which updates the state and re-renders.
+
+&nbsp;
+<h3><strong>What breaks at each step</strong></h3>
+Every step has its typical problems. This is the table I wish I had when I started:
+
+| Step | Typical problem | Symptom | First tool to use |
 |---|---|---|---|
-| 1 Browser | JS error, CORS block, double-submit | Nothing happens / console red | DevTools → Console + Network tab |
-| 2 DNS | Stale record, wrong TTL after migration | Works for some users, not others | `nslookup api.example.com` / `dig +trace` |
-| 3 TLS | Expired cert, missing intermediate | Browser warning, mobile clients fail first | `openssl s_client -connect host:443 -servername host` |
-| 4 Load balancer | Unhealthy backend, sticky session missing | Random 502/503, users "logged out" | LB health probe logs |
-| 5 Web server | Timeout too short, body size limit | 413 / 504 on big uploads or slow calls | Access + error logs |
-| 6 Application | Unhandled exception, N+1 queries | 500, or slow only on big lists | APM / app logs, query count per request |
-| 7 Database | Missing index, lock contention, pool exhausted | Slow everywhere at peak | `EXPLAIN ANALYZE`, slow query log |
-| 8 Render | Huge payload, re-rendering everything | Fast API, slow page | DevTools Performance tab |
+| 1 Browser | JS error, CORS block, double submit | Nothing happens, red errors in the console | DevTools → Console and Network tab |
+| 2 DNS | Old record, wrong TTL after a migration | Works for some users but not others | `nslookup api.example.com` |
+| 3 TLS | Expired certificate, missing intermediate | Browser warning; mobile apps fail first | `openssl s_client -connect host:443 -servername host` |
+| 4 Load balancer | Unhealthy backend, no sticky sessions | Random 502/503, users "logged out" | Health probe logs |
+| 5 Web server | Timeout too short, body size limit | 413 or 504 on big uploads or slow calls | Access and error logs |
+| 6 Application | Unhandled exception, N+1 queries | 500 errors, or slow only on big lists | Application logs, query count per request |
+| 7 Database | Missing index, locks, connection pool full | Slow everywhere at peak times | `EXPLAIN ANALYZE`, slow query log |
+| 8 Render | Huge payload, re-rendering everything | Fast API but slow page | DevTools Performance tab |
 
-**The Network tab answers "which hop" in seconds.** Click the request and read the Timing breakdown: long *DNS lookup* → hop 2; long *Initial connection/SSL* → hop 3; long *Waiting (TTFB)* → hops 4–7, it's the server; long *Content download* → payload too big.
+> **_NOTE:_**  The Network tab in the browser DevTools tells you the step in seconds. Click the request and open "Timing": a long <em>DNS lookup</em> means step 2, a long <em>Initial connection / SSL</em> means step 3, a long <em>Waiting (TTFB)</em> means the server side (steps 4–7), and a long <em>Content download</em> means the response is too big.
 
-## The minimal full-stack, layer by layer
+&nbsp;
+<h3><strong>A simple full stack for a new project</strong></h3>
+In this section I want to share what I would choose for a new small-to-medium web app, and why:
 
-What I'd pick for a new small-to-medium web app, and why:
-
-| Layer | Pick | Why |
+| Layer | Choice | Why |
 |---|---|---|
-| Frontend | Vue or React + Vite | Component model, huge ecosystem, fast dev server |
-| API | Django REST Framework or Express | Batteries included vs. minimal — pick by team |
-| Auth | Session cookies (same domain) or OAuth/OIDC via a provider | Don't hand-roll password storage |
-| Database | PostgreSQL | Relational integrity, JSON columns when you need them |
-| Cache / queue | Redis | Sessions, rate limiting, background job broker |
-| Hosting | PaaS (App Service, Heroku) | Skip OS patching until you have a reason not to |
-| Observability | Structured logs + request IDs | One ID across every hop = one search to trace a request |
+| Frontend | Vue or React with Vite | Component model, big ecosystem, fast dev server |
+| API | Django REST Framework or Express | "Batteries included" vs. minimal — choose by team |
+| Authentication | Session cookies (same domain) or OAuth/OIDC with a provider | Don't build password storage yourself |
+| Database | PostgreSQL | Relational integrity, JSON columns when needed |
+| Cache / queue | Redis | Sessions, rate limiting, background jobs |
+| Hosting | PaaS, like [Azure App Service](/Azure-App-Service-Hosting-Guide/) | No OS patching until you really need it |
+| Observability | Structured logs with request IDs | One ID across all steps = one search to trace a request |
 
-## Patterns that save you at every layer
+&nbsp;
+<h3><strong>Good habits at every layer</strong></h3>
+<strong>Frontend</strong>
 
-**Frontend**
-- Disable the button on submit. Double-clicks become duplicate rows otherwise.
-- Validate on the client for UX, **re-validate on the server for security.** The client is not yours.
+1. Disable the button after the first click — otherwise double clicks become duplicate rows.
+2. Validate in the browser for a good user experience, but <strong>validate again on the server</strong> for security. The browser is not under your control.
 
-**API**
-- Return consistent errors: `{"error": {"code": "VALIDATION", "fields": {...}}}` — the frontend can render any of them the same way.
-- Make writes **idempotent** where possible (client sends an idempotency key) so retries are safe.
+<strong>API</strong>
 
-**Database**
-- Index every column you filter or join on. Check with `EXPLAIN` before shipping.
-- Wrap multi-step writes in a transaction — partial saves are worse than failed saves.
-- Use a connection pool; opening a connection per request falls over under load.
+1. Return errors in one consistent format, for example `{"error": {"code": "VALIDATION", "fields": {...}}}`, so the frontend can show all of them the same way.
+2. Make writes <strong>idempotent</strong> when possible (the client sends an idempotency key), so retries are safe.
 
-**Everywhere**
-- Generate a request ID at the edge, pass it in a header (`X-Request-ID`), log it at every layer.
+<strong>Database</strong>
+
+1. Add an index for every column you filter or join on, and check with `EXPLAIN` before going live.
+2. Put multi-step writes in a transaction — a half-saved record is worse than a failed save.
+3. Use a connection pool; opening a new connection for every request fails under load.
+
+&nbsp;
+<h3><strong>Request IDs: one search to follow a request</strong></h3>
+The habit that helped me the most is adding a <strong>request ID</strong> at the first step and logging it everywhere. In Django, this is a small middleware:
 
 ```python
-# Django middleware: attach a request ID to every log line and response
 import uuid, logging
 
 class RequestIDMiddleware:
@@ -93,8 +112,8 @@ class RequestIDMiddleware:
         return response
 ```
 
-When a user reports "it failed," ask for the ID in the error message. One search across your logs and you have the whole path.
+When a user reports "it failed", ask for the ID shown in the error message. One search in the logs, and you can see the whole path of that request.
 
-## The one-sentence version
-
-Every bug lives at a hop — **find the hop first, then the bug.** The Network tab, a request ID, and `EXPLAIN` will locate 90% of them before you've opened your editor.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Every bug lives at one of the steps between the click and the database. Find the step first, then the bug: the Network tab, a request ID and `EXPLAIN` will locate most problems before you even open your editor. You can read more about the Network tab timing in the official <a href="https://developer.chrome.com/docs/devtools/network/reference/" target="_blank" rel="noopener">Chrome DevTools documentation</a>.

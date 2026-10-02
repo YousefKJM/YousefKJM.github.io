@@ -1,15 +1,7 @@
 ---
-title: "Part-of-Speech Tagging with a Hidden Markov Model, Step by Step"
-excerpt: "How a 1960s-era statistical model still tags 'count' correctly as a noun or a verb from context. Counting your way to an HMM, the Viterbi algorithm on a trellis you can follow by hand, and about forty lines of Python that implement both."
+title: "Part-of-Speech Tagging with a Hidden Markov Model and Viterbi"
+excerpt: "In this article I would like to present how a Hidden Markov Model tags each word in a sentence with its part of speech — training it by counting, decoding with the Viterbi algorithm, and testing it on the Brown corpus, including the smoothing mistake that made it lose to a simple baseline."
 ---
-
-Before transformers, before word embeddings, a **Hidden Markov Model** was the standard way to tag every word in a sentence with its grammatical role. I built one as an individual NLP project. It's still the best introduction there is to sequence modelling — every idea in it (states, transitions, dynamic programming over a sequence) shows up again in RNNs, CRFs, and speech recognition.
-
-## The problem
-
-The word **"count"** is a noun in *"the count was wrong"* and a verb in *"count the votes."* A dictionary can't decide. Context can.
-
-## The model: two tables, both just counts
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 190" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Hidden Markov Model: hidden tag states DET, NOUN, VERB connected left to right by transition probabilities; each emits an observed word below it through an emission probability">
@@ -36,15 +28,24 @@ The word **"count"** is a noun in *"the count was wrong"* and a verb in *"count 
 </svg>
 </div>
 
-| Table | Question it answers | Estimated from a tagged corpus as |
+<h3><strong>Short introduction</strong></h3>
+The word <strong>"count"</strong> is a noun in <em>"the count was wrong"</em> and a verb in <em>"count the votes"</em>. A dictionary can't decide which one it is — only the context can. Part-of-speech (POS) tagging is the task of choosing the right grammatical role for every word in a sentence, and it is used in speech synthesis, information retrieval and many other NLP tasks. For an individual NLP project, I implemented a POS tagger using a <strong>Hidden Markov Model (HMM)</strong>. In this article I would like to walk you through it step by step, and share the real results of testing it on the Brown corpus — including a mistake that is very easy to make.
+
+&nbsp;
+<h3><strong>The model</strong></h3>
+The diagram at the top of this article shows the idea. The tags (DET, NOUN, VERB, …) are <strong>hidden states</strong> — we can't see them. What we see are the words. The model has two tables, and both of them are just counts from a tagged corpus:
+
+| Table | Question it answers | Estimated as |
 |---|---|---|
 | **Transition** `P(tagᵢ │ tagᵢ₋₁)` | How likely is a NOUN after a DET? | `count(DET→NOUN) / count(DET)` |
 | **Emission** `P(word │ tag)` | If the tag is NOUN, how likely is the word "count"? | `count(NOUN, "count") / count(NOUN)` |
-| **Start** `P(tag₁)` | How likely is a sentence to start with DET? | `count(sentences starting DET) / count(sentences)` |
+| **Start** `P(tag₁)` | How likely does a sentence start with DET? | `count(sentences starting with DET) / count(sentences)` |
 
-That's the entire training step: **counting** over a tagged corpus like Brown. No gradient descent.
+For the data I used the <strong>Brown corpus</strong> from NLTK with the universal tagset (12 tags). It has 57,340 tagged sentences, which I split 80% for training and 20% for testing.
 
-## Step 1 — Train (count and normalize)
+&nbsp;
+<h3><strong>Step 1 — Train by counting</strong></h3>
+Training an HMM means counting. There is no gradient descent:
 
 ```python
 from collections import Counter, defaultdict
@@ -62,22 +63,9 @@ def train(tagged_sentences):
     return start, trans, emit, tag_count
 ```
 
-## Step 2 — Smooth, or one unseen word kills everything
-
-A word never seen with a tag gets probability **0**, and multiplying by 0 zeroes out every path through it. Add-one (Laplace) smoothing fixes it:
-
-```python
-import math
-
-def log_p(counter, key, total, vocab_size):
-    return math.log((counter[key] + 1) / (total + vocab_size))   # never log(0)
-```
-
-Work in **log space** throughout: multiplying 20 small probabilities underflows to 0.0 in floating point; adding their logs doesn't.
-
-## Step 3 — Decode with Viterbi
-
-Brute force is hopeless: 12 tags over a 20-word sentence is 12²⁰ possible tag sequences. Viterbi uses dynamic programming: at each word, for each tag, keep **only the best path that ends in that tag.**
+&nbsp;
+<h3><strong>Step 2 — Decode with Viterbi</strong></h3>
+Now we need to find the best tag sequence for a new sentence. Trying every combination is impossible: 12 tags over a 20-word sentence is 12²⁰ sequences. The <strong>Viterbi algorithm</strong> uses dynamic programming instead: for every word and every tag, it keeps <strong>only the best path that ends in that tag</strong>, then follows the back-pointers at the end:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 230" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Viterbi trellis for the sentence count the votes: columns are words, rows are tags; the highlighted best path is VERB, DET, NOUN">
@@ -111,46 +99,89 @@ Brute force is hopeless: 12 tags over a 20-word sentence is 12²⁰ possible tag
 </div>
 
 ```python
-def viterbi(words, tags, start, trans, emit, tag_count, V):
+import math
+
+def viterbi(words, tags, start, trans, tag_count, emit_logp):
     words = [w.lower() for w in words]
-    n_sent = sum(start.values())
-    # best[i][t] = (log-prob of best path ending in tag t at word i, backpointer)
-    best = [{t: (log_p(start, t, n_sent, len(tags)) +
-                 log_p(emit[t], words[0], tag_count[t], V), None) for t in tags}]
+    n = sum(start.values())
+    tr = lambda p, t: math.log((trans[p][t] + 1) / (tag_count[p] + len(tags)))
+    # best[i][t] = (log-prob of the best path ending in tag t at word i, back-pointer)
+    best = [{t: (math.log((start[t] + 1) / (n + len(tags))) + emit_logp(t, words[0]), None) for t in tags}]
     for i in range(1, len(words)):
         col = {}
         for t in tags:
-            e = log_p(emit[t], words[i], tag_count[t], V)
-            prev_t, score = max(
-                ((p, best[i-1][p][0] + log_p(trans[p], t, tag_count[p], len(tags))) for p in tags),
-                key=lambda x: x[1])
-            col[t] = (score + e, prev_t)
+            p, score = max(((p, best[i-1][p][0] + tr(p, t)) for p in tags), key=lambda x: x[1])
+            col[t] = (score + emit_logp(t, words[i]), p)
         best.append(col)
-    # backtrack from the best final tag
-    t = max(best[-1], key=lambda k: best[-1][k][0])
+    t = max(best[-1], key=lambda k: best[-1][k][0])   # follow the back-pointers
     path = [t]
     for i in range(len(words) - 1, 0, -1):
         t = best[i][t][1]
         path.append(t)
-    return list(reversed(path))
+    return path[::-1]
 ```
 
-Cost: `O(n × T²)` — linear in sentence length. For 20 words and 12 tags that's under 3,000 steps instead of 12²⁰.
+This runs in `O(n × T²)`: for 20 words and 12 tags, that is under 3,000 steps instead of 12²⁰.
 
-## Step 4 — Evaluate honestly
+> **_NOTE:_**  Always work with <strong>log probabilities</strong>. Multiplying 20 small probabilities becomes 0.0 in floating point (underflow). Adding their logs doesn't.
 
-- **Split by sentence** (e.g. 80/20). Never evaluate on sentences the model counted.
-- Report accuracy on **all words and on unknown words separately** — the overall number hides how badly you handle vocabulary you've never seen.
-- Baseline first: "tag each word with its most frequent tag" already scores in the low 90s on Brown. Your HMM has to beat that to mean anything.
+&nbsp;
+<h3><strong>Step 3 — Emission probabilities and the mistake I made</strong></h3>
+A word that never appeared with a tag in training gets probability 0, and one zero kills every path through it. The textbook fix is <strong>add-one (Laplace) smoothing</strong>: add 1 to every count. So the obvious first version uses it for emissions too:
 
-## Where it breaks, and what replaced it
+```python
+def laplace_emit(emit, tag_count, V):
+    return lambda t, w: math.log((emit[t][w] + 1) / (tag_count[t] + V))   # V = vocabulary size
+```
 
-| Limitation | Why | What fixed it |
+Then I compared it with the simplest possible baseline — tag every word with the tag it had most often in training (and NOUN for unknown words). These are the real results on the 232,177 test words:
+
+| Model | Accuracy | Unknown words |
 |---|---|---|
-| Unknown words | Emission prob is just a smoothing constant | Suffix features (`-ing`, `-ly`) → CRFs |
-| Only looks one tag back | Bigram Markov assumption | Trigram HMMs, then BiLSTMs |
-| Words are atomic symbols | "run"/"running" share nothing | Word embeddings |
+| Most-frequent-tag baseline | 94.61% | 60.24% |
+| HMM + Viterbi, Laplace emissions | 93.96% ❌ | 45.39% |
 
-## Why it's worth knowing in 2021
+The HMM <strong>lost to the baseline</strong>. The reason is the unknown words (2.2% of the test words). The vocabulary has 45,153 words, so adding 1 for every word gives each unseen word almost the same tiny probability under every tag. The model has no idea which tag an unknown word probably is.
 
-The same three moves — **hidden states, transition scores, dynamic-programming decode** — power CTC decoding in [speech recognition](/Building-a-Deep-Speech-Recognizer-CNN-RNN-CTC/) and beam search in [machine translation](/Neural-Machine-Translation-with-RNNs/). Learn Viterbi once and you'll recognize it everywhere.
+The fix is to handle two different cases separately:
+
+1. A word we know, but never saw with this tag → a very small probability.
+2. A word we have never seen at all → estimate how often each tag produces <strong>new</strong> words. A good estimate is the share of words that appeared only once with that tag (called <em>hapax</em> words). Open classes like NOUN have many of them; closed classes like DET almost none.
+
+```python
+def make_emit_logp(emit, tag_count, vocab, k=0.001):
+    hapax = Counter(t for t in emit for w, c in emit[t].items() if c == 1)
+    def emit_logp(t, w):
+        c = emit[t][w]
+        if c:          return math.log(c / tag_count[t])          # seen with this tag
+        if w in vocab: return math.log(1e-12)                     # known word, never with this tag
+        return math.log((hapax[t] + k) / tag_count[t])            # unknown word: how often t makes new words
+    return emit_logp
+```
+
+And the result:
+
+| Model | Accuracy | Unknown words |
+|---|---|---|
+| Most-frequent-tag baseline | 94.61% | 60.24% |
+| HMM + Viterbi, Laplace emissions | 93.96% | 45.39% |
+| HMM + Viterbi, hapax unknown-word model | **96.43%** ✅ | **62.69%** |
+
+And of course the sentences from the introduction:
+
+```
+count the votes .      →  count/VERB  the/DET  votes/NOUN  ./.
+the count was wrong .  →  the/DET  count/NOUN  was/VERB  wrong/ADJ  ./.
+```
+
+&nbsp;
+<h3><strong>Step 4 — Evaluate honestly</strong></h3>
+This experiment is a good reminder of three rules worth following for any model:
+
+1. **Always compare with a simple baseline first.** Without the baseline, 93.96% would have looked like a good result.
+2. **Report unknown words separately.** The overall number hides how badly a model handles words it has never seen.
+3. **Split by sentence**, and never evaluate on sentences the model was trained on.
+
+&nbsp;
+<h3><strong>Summary</strong></h3>
+A Hidden Markov Model is trained by counting and decoded with the Viterbi algorithm, and it can still tell "count the votes" from "the count was wrong". The most important lesson, though, was not the algorithm but the evaluation: textbook smoothing made the model worse than a one-line baseline, and only a proper unknown-word model fixed it. The same ideas — hidden states, transition scores and dynamic programming — appear again in speech recognition and machine translation, which I will cover in the next articles. If you want to experiment yourself, the <a href="https://www.nltk.org/book/ch05.html" target="_blank" rel="noopener">NLTK book chapter on tagging</a> is a great place to start.

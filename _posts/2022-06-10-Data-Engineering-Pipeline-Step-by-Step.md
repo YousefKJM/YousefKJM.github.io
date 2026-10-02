@@ -1,11 +1,9 @@
 ---
-title: "From Raw CSV to Trusted Dashboard: A Data Pipeline in Seven Steps"
-excerpt: "Ingest, validate, clean, model, load, test, schedule — a complete small-scale data pipeline in Python and SQL, with the pandas and SQL patterns analysts reach for daily and the data-quality checks most pipelines forget."
+title: "Building a Data Pipeline from Raw CSV to a Trusted Report"
+excerpt: "In this article I would like to present how to build a small but complete data pipeline in Python and SQL — ingest, validate, clean, model, query, test and schedule — using a messy export as the example, including a date-parsing bug that passed every test until one more check was added."
+header:
+  image: /images/posts/data-pipeline/monthly_revenue.png
 ---
-
-Most data work isn't modelling — it's getting data into a state where anyone can trust a number on a dashboard. This is the pipeline shape I use for small-to-medium datasets, built with plain Python, pandas, and SQL before reaching for heavier tooling.
-
-## The shape: bronze, silver, gold
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 190" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Pipeline layers: sources land untouched in bronze raw storage, are validated and cleaned into silver, then modeled into gold aggregate tables that feed dashboards">
@@ -39,25 +37,38 @@ Most data work isn't modelling — it's getting data into a state where anyone c
 </svg>
 </div>
 
-**Why keep raw data untouched:** cleaning logic always has bugs. If you only stored the cleaned version, a bug destroys data permanently. With bronze intact, you fix the code and replay.
+<h3><strong>Short introduction</strong></h3>
+Most data work is not machine learning. It is getting data into a state where people can trust the numbers on a report. Exports arrive with duplicate rows, inconsistent spelling and dates in different formats, and every one of those problems ends up as a wrong number on a dashboard if nobody catches it. In this article I would like to present the pipeline structure I use for small and medium datasets, built only with Python, pandas and SQL. To make it concrete, I ran every step on a deliberately messy sample export of 625 orders — and it caught a bug I didn't expect.
 
-## Step 1 — Ingest to bronze, exactly as received
+&nbsp;
+<h3><strong>The structure: bronze, silver and gold</strong></h3>
+The diagram at the top shows the three layers:
+
+- **Bronze** — the raw data, exactly as received, never changed.
+- **Silver** — cleaned data: correct types, no duplicates, validated.
+- **Gold** — business-ready tables and aggregates that feed reports.
+
+> **_NOTE:_**  Why keep the raw data untouched? Because cleaning code always has bugs. If you only keep the cleaned version, a bug destroys data forever. With bronze kept as it is, you fix the code and run it again. As you will see below, this is not a theoretical problem.
+
+&nbsp;
+<h3><strong>Step 1 — Ingest to bronze</strong></h3>
+Lets start by saving the export exactly as it is, with two extra columns that tell us when and from where it was loaded:
 
 ```python
 import pandas as pd
 from datetime import datetime, timezone
 
-raw = pd.read_csv("exports/orders_2022-05.csv", dtype=str)   # read EVERYTHING as text first
-raw["_loaded_at"]  = datetime.now(timezone.utc).isoformat()
+raw = pd.read_csv("exports/orders_2022-05.csv", dtype=str)   # read everything as text first
+raw["_loaded_at"]   = datetime.now(timezone.utc).isoformat()
 raw["_source_file"] = "orders_2022-05.csv"
 raw.to_parquet("bronze/orders/2022-05.parquet", index=False)
 ```
 
-`dtype=str` is deliberate: if pandas guesses types, a product code like `007` becomes the integer `7` before you ever see it.
+`dtype=str` is on purpose: if pandas guesses types, a code like `007` becomes the number `7` before you ever see it.
 
-## Step 2 — Validate before you transform
-
-Fail loudly, early, with a reason:
+&nbsp;
+<h3><strong>Step 2 — Validate before transforming</strong></h3>
+The pipeline should stop early, with a clear reason, when a file is broken:
 
 ```python
 def validate(df):
@@ -67,42 +78,64 @@ def validate(df):
         errors.append(f"missing columns: {missing}")
     if df["order_id"].isna().any():
         errors.append(f"{df['order_id'].isna().sum()} rows with no order_id")
-    if df["order_id"].duplicated().any():
-        errors.append(f"{df['order_id'].duplicated().sum()} duplicate order_ids")
     if (pd.to_numeric(df["amount"], errors="coerce") < 0).any():
         errors.append("negative amounts present")
     if errors:
         raise ValueError("Validation failed:\n  " + "\n  ".join(errors))
 ```
 
-## Step 3 — Clean into silver
+This is the real output when I gave it a broken export with a missing order id and a negative amount:
+
+```
+Validation failed:
+  1 rows with no order_id
+  negative amounts present
+```
+
+&nbsp;
+<h3><strong>Step 3 — Clean into silver (and the bug)</strong></h3>
+The sample export has three typical problems: 25 re-exported duplicate rows, country codes written as `"SA"`, `" sa"` and `"Sa "`, and dates in two formats (`2022-03-24` and `24/03/2022`).
+
+The dates are the interesting part. These are the real results (pandas 1.5) of two ways to parse them:
+
+```
+pd.to_datetime(dates, errors="coerce")
+  -> 1 NaT, but latest date = 2022-12-05
+  -> 56 dates have day and month swapped
+
+two explicit formats, one after the other
+  -> 1 NaT, range 2022-01-01 .. 2022-05-31
+```
+
+1. The first one looked perfect: only one bad date — the real `not-a-date` row in the file. But for every `dd/mm/yyyy` value where the day is 12 or less, pandas guessed month-first, so `03/02/2022` became the <strong>2nd of March</strong> instead of the 3rd of February. The export only covers January to May, but revenue appeared in June to December. Pandas did print a `UserWarning` — which nobody reads in a scheduled job at 2 a.m.
+2. Parsing each known format explicitly gave correct dates.
+
+So this is the cleaning step:
 
 ```python
-df = pd.read_parquet("bronze/orders/2022-05.parquet")
+def parse_dates(s):
+    iso = pd.to_datetime(s, format="%Y-%m-%d", errors="coerce")     # try each known format explicitly
+    dmy = pd.to_datetime(s, format="%d/%m/%Y", errors="coerce")
+    return iso.fillna(dmy)
 
+df = pd.read_parquet("bronze/orders/2022-05.parquet")
 df = (df
       .rename(columns=str.lower)
       .assign(
-          order_date = lambda d: pd.to_datetime(d["order_date"], errors="coerce"),
+          order_date = lambda d: parse_dates(d["order_date"]),
           amount     = lambda d: pd.to_numeric(d["amount"], errors="coerce"),
           country    = lambda d: d["country"].str.strip().str.upper(),
       )
       .dropna(subset=["order_id", "order_date"])
-      .drop_duplicates(subset="order_id", keep="last"))     # latest version of each order wins
-
+      .drop_duplicates(subset="order_id", keep="last"))         # latest version of each order wins
 df.to_parquet("silver/orders/2022-05.parquet", index=False)
 ```
 
-Cleaning rules that pay off every time:
+Result: 625 bronze rows became <strong>599 silver rows</strong> (25 duplicates and 1 unreadable date removed), and the country codes became exactly `AE`, `BH`, `KW` and `SA`.
 
-| Problem | Fix |
-|---|---|
-| `" sa"`, `"SA"`, `"Sa "` | `.str.strip().str.upper()` |
-| Dates in three formats | `pd.to_datetime(..., errors="coerce")`, then count the `NaT`s you created |
-| Duplicates from re-exports | Dedupe on the **business key**, not on the whole row |
-| Silent `NaN`s from `coerce` | Log how many values you nulled — a jump means the source format changed |
-
-## Step 4 — Model the gold layer (star schema)
+&nbsp;
+<h3><strong>Step 4 — Model the gold layer</strong></h3>
+For reporting, the gold layer uses a <strong>star schema</strong>:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 220" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Star schema: a central fact_orders table of measures and foreign keys, surrounded by dimension tables for customer, date, and product">
@@ -127,9 +160,11 @@ Cleaning rules that pay off every time:
 </svg>
 </div>
 
-**Facts** are events with numbers (orders, payments). **Dimensions** describe them (who, when, what). Dashboards slice facts by dimensions — this shape makes every one of those queries simple and fast.
+<strong>Facts</strong> are events with numbers (orders, payments). <strong>Dimensions</strong> describe them (who, when, what). Reports slice facts by dimensions, and this structure keeps those queries simple and fast.
 
-## Step 5 — Load and query with SQL
+&nbsp;
+<h3><strong>Step 5 — Load and query with SQL</strong></h3>
+In this section we will load the silver data into a database and answer real questions with SQL:
 
 ```python
 import sqlite3
@@ -137,65 +172,82 @@ con = sqlite3.connect("warehouse.db")
 df.to_sql("silver_orders", con, if_exists="replace", index=False)
 ```
 
-The SQL patterns worth knowing cold:
+Monthly revenue with month-over-month growth, using the `LAG` window function:
 
 ```sql
--- Monthly revenue with month-over-month growth (window function)
 WITH monthly AS (
   SELECT strftime('%Y-%m', order_date) AS month, SUM(amount) AS revenue
   FROM silver_orders GROUP BY 1
 )
-SELECT month, revenue,
+SELECT month, ROUND(revenue, 2) AS revenue,
        ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY month))
              / LAG(revenue) OVER (ORDER BY month), 1) AS mom_growth_pct
 FROM monthly ORDER BY month;
+```
 
--- Each customer's most recent order (deduplicate with ROW_NUMBER)
+```
+  month  revenue  mom_growth_pct
+2022-01 56435.70             NaN
+2022-02 49384.90           -12.5
+2022-03 55957.40            13.3
+2022-04 48029.26           -14.2
+2022-05 61793.76            28.7
+```
+
+And the same result as a chart for the report:
+
+<img src="/images/posts/data-pipeline/monthly_revenue.png" alt="Monthly revenue chart" style="margin-inline:auto;" />
+
+Two more patterns worth knowing by heart — the latest order of each customer with `ROW_NUMBER`, and a running total with `SUM() OVER`:
+
+```sql
 SELECT * FROM (
   SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn
   FROM silver_orders
 ) WHERE rn = 1;
 
--- Running total per customer
 SELECT customer_id, order_date, amount,
        SUM(amount) OVER (PARTITION BY customer_id ORDER BY order_date) AS running_total
 FROM silver_orders;
 ```
 
-`LAG`, `ROW_NUMBER`, and `SUM() OVER` cover a surprising share of real analytics questions.
-
-## Step 6 — Test the data, not just the code
+&nbsp;
+<h3><strong>Step 6 — Test the data, not only the code</strong></h3>
+Every run ends with data tests:
 
 ```python
-def test_gold(con):
-    q = lambda sql: con.execute(sql).fetchone()[0]
-    assert q("SELECT COUNT(*) FROM silver_orders") > 0, "empty table"
-    assert q("SELECT COUNT(*) - COUNT(DISTINCT order_id) FROM silver_orders") == 0, "duplicate keys"
-    assert q("SELECT COUNT(*) FROM silver_orders WHERE amount IS NULL") == 0, "null amounts"
-    # Reconciliation: does the total still match the source file?
-    src_total = pd.to_numeric(pd.read_parquet("bronze/orders/2022-05.parquet")["amount"], errors="coerce").sum()
-    assert abs(q("SELECT SUM(amount) FROM silver_orders") - src_total) < 0.01, "totals drifted"
+q = lambda sql: con.execute(sql).fetchone()[0]
+checks = {
+  "table not empty":    q("SELECT COUNT(*) FROM silver_orders") > 0,
+  "no duplicate keys":  q("SELECT COUNT(*) - COUNT(DISTINCT order_id) FROM silver_orders") == 0,
+  "no null amounts":    q("SELECT COUNT(*) FROM silver_orders WHERE amount IS NULL") == 0,
+  "dates inside the export window":
+      q("SELECT COUNT(*) FROM silver_orders WHERE order_date NOT BETWEEN '2022-01-01' AND '2022-05-31'") == 0,
+  "totals reconcile with bronze": abs(q("SELECT SUM(amount) FROM silver_orders") - bronze_total) < 0.01,
+}
 ```
 
-The reconciliation check is the one that catches the expensive bugs — a join that silently duplicated rows, or a filter that dropped a region.
+```
+  PASS  table not empty
+  PASS  no duplicate keys
+  PASS  no null amounts
+  PASS  dates inside the export window
+  PASS  totals reconcile with bronze
+```
 
-## Step 7 — Make it idempotent, then schedule it
+> **_NOTE:_**  Here is the important lesson from step 3: with the swapped dates, the first three checks <strong>and the reconciliation check all passed</strong> — the total was correct, only the months were wrong. The "dates inside the export window" check is the one that catches it. Add range checks for every date and amount column, not only totals.
 
-**Idempotent** = running it twice gives the same result as running it once. Partition by date and overwrite the partition rather than appending:
+&nbsp;
+<h3><strong>Step 7 — Make it repeatable and schedule it</strong></h3>
+A pipeline should be <strong>idempotent</strong>: running it twice gives the same result as running it once. Process one date partition at a time and overwrite it, instead of appending. Then schedule it:
 
 ```bash
-# cron: 02:00 every day, process yesterday's partition
+# cron: every day at 02:00, process yesterday's partition
 0 2 * * * cd /opt/pipeline && python run.py --date "$(date -d yesterday +\%F)" >> logs/run.log 2>&1
 ```
 
-When cron and scripts stop scaling — dependencies between jobs, retries, backfills — that's when a scheduler like Airflow earns its complexity. Not before.
+When cron and scripts are no longer enough — dependencies between jobs, retries, backfills — that is the right moment for a scheduler like Apache Airflow. Not before.
 
-## The checklist
-
-- [ ] Raw data stored untouched, with load time and source
-- [ ] Validation fails loudly with specific reasons
-- [ ] Types parsed explicitly, never guessed
-- [ ] Deduplication on the business key
-- [ ] Facts and dimensions separated in the reporting layer
-- [ ] Row-count, uniqueness, null, and reconciliation tests on every run
-- [ ] Re-running a day produces the same result
+&nbsp;
+<h3><strong>Summary</strong></h3>
+A trustworthy pipeline keeps raw data untouched, validates early, parses types explicitly, removes duplicates by the business key, separates facts and dimensions, and tests the data on every run. The date bug in this example is a good reminder of why: it looked correct, passed the usual checks, and would have shown revenue in months that never happened. You can read more about date parsing in the <a href="https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html" target="_blank" rel="noopener">pandas documentation</a>.

@@ -1,7 +1,11 @@
 ---
-title: "IaaS, PaaS, SaaS and Serverless: Choosing the Right Cloud Model"
-excerpt: "In this article I would like to explain the cloud service models — IaaS, PaaS, SaaS and serverless — who manages what in each one, and a simple way to choose between them, based on my notes while preparing for the AZ-900 exam."
+title: "IaaS, PaaS, SaaS, Serverless: The One-Diagram Decision Map"
+excerpt: "Who manages what in each cloud service model, the shared responsibility line that actually matters for security, and a five-question flowchart for picking the right model — distilled from AZ-900 prep into something you'll actually reuse."
 ---
+
+I wrote this while preparing for **AZ-900 (Azure Fundamentals)**. The exam material sprawls; the core idea doesn't. It's one question: **how much of the stack do you want to own?**
+
+## The stack, and who owns each layer
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 380" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Responsibility matrix: on-premises you manage all layers; IaaS provider manages up to virtualization; PaaS provider also manages OS and runtime; SaaS provider manages everything except data and access">
@@ -41,36 +45,20 @@ excerpt: "In this article I would like to explain the cloud service models — I
 </svg>
 </div>
 
-<h3><strong>Short introduction</strong></h3>
-While working as an Azure App Developer at Microsoft, I prepared for the <strong>AZ-900 (Microsoft Azure Fundamentals)</strong> certification. The exam material covers a lot of topics, but the most important idea is actually simple: when you move to the cloud, <strong>how much of the stack do you still want to manage yourself?</strong> The answer to that question is the difference between IaaS, PaaS, SaaS and serverless. In this article I would like to explain these models with real Azure services, and share a simple flow I use to choose between them.
+**Read the top row first.** In every model — even SaaS — **data and access are yours.** Most cloud breaches aren't the provider failing; they're a misconfigured storage container, an over-permissioned account, or a missing MFA policy on the customer's side of the line.
 
-&nbsp;
-<h3><strong>Who manages what</strong></h3>
-The diagram at the top of this article shows the full stack, from the physical datacenter up to your data. The highlighted (teal) part is what you manage; the rest is managed by the cloud provider:
+## Same app, four ways
 
-- **On-premises** — you manage everything, from the building to the application.
-- **IaaS (Infrastructure as a Service)** — the provider gives you virtual machines, storage and network. You still manage the operating system and everything above it.
-- **PaaS (Platform as a Service)** — the provider also manages the OS and runtime. You deploy your code and configure it.
-- **SaaS (Software as a Service)** — the provider runs the whole application. You only manage your data and who has access to it.
-
-> **_NOTE:_**  Look at the top row again. In <strong>every</strong> model, even SaaS, your data and access are your responsibility. This is the "shared responsibility model", and it explains why most cloud security incidents are not the provider failing — they are a public storage container, an over-permissioned account, or a missing MFA policy on the customer side.
-
-&nbsp;
-<h3><strong>The same app, four ways</strong></h3>
-To make it concrete, lets take one task — hosting a web application — and see how it looks in each model on Azure:
+Hosting a web app, mapped to real Azure services:
 
 | Model | Azure service | You do | Azure does |
 |---|---|---|---|
-| **IaaS** | Virtual Machines | Patch the OS, install the runtime, configure IIS or nginx, back it up | Hardware, hypervisor, network |
-| **PaaS** | App Service | Deploy the code, set the configuration | OS, patching, runtime, load balancing, scaling |
+| **IaaS** | Virtual Machines | Patch the OS, install the runtime, configure IIS/nginx, back it up | Hardware, hypervisor, network fabric |
+| **PaaS** | App Service | Deploy code, set config | OS, patching, runtime, load balancing, scaling |
 | **Serverless** | Azure Functions | Write functions | Everything else, including scaling to zero |
-| **SaaS** | Microsoft 365 | Configure users, policies and data | The entire application |
+| **SaaS** | Microsoft 365 | Configure users, policies, data | The entire application |
 
-If you followed my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/), the web app there used the PaaS model: we only deployed code to App Service and never touched a server.
-
-&nbsp;
-<h3><strong>How to choose</strong></h3>
-In this section I want to share the flow I use. Start at the top, and stop at the first "yes":
+## Five questions to pick a model
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 330" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Decision flow: if an off-the-shelf product solves it choose SaaS; if you need OS-level control choose IaaS; if the workload is event-driven and short choose serverless; if it is long-running choose containers; otherwise choose PaaS">
@@ -113,34 +101,26 @@ In this section I want to share the flow I use. Start at the top, and stop at th
 </svg>
 </div>
 
-1. **Does an existing product already do this?** Then use SaaS. Building your own email or CRM is rarely worth it.
-2. **Do you need control of the OS** (custom agents, kernel settings, legacy software)? Then use IaaS — and accept the patching that comes with it.
-3. **Is the workload event-driven, short and bursty?** Then serverless is usually the cheapest option.
-4. **Do you have many services and need portability?** Then containers (for example Azure Kubernetes Service, which I introduced in [this article](/Containers-and-Azure-Kubernetes-Service/)).
-5. **Otherwise** — a normal web app or API — PaaS.
+Work top to bottom and stop at the first "yes." The order matters: it pushes you toward the **most managed** option that still fits, which is almost always the cheapest to operate.
 
-The order matters. It always pushes you to the <strong>most managed</strong> option that still fits, which is almost always the cheapest one to operate.
+## The cloud vocabulary that actually comes up
 
-&nbsp;
-<h3><strong>Cloud terms you will hear all the time</strong></h3>
-These terms come up in AZ-900 and in every cloud discussion afterwards:
-
-| Term | Meaning |
+| Term | One-line meaning |
 |---|---|
-| **CapEx → OpEx** | Stop buying servers upfront; pay monthly for what you use |
+| **CapEx → OpEx** | Stop buying servers up front; pay monthly for what you use |
 | **Elasticity** | Scale out and back in automatically with demand |
-| **High availability** | Keep running when one component fails (Availability Sets and Zones) |
-| **Disaster recovery** | Keep running when a whole region fails (paired regions, geo-replication) |
-| **Region pair** | Two regions in the same geography, updated one at a time and recovered in priority order |
-| **Availability Zone** | A physically separate datacenter inside a region |
-| **Composite SLA** | Chained services multiply: 99.95% × 99.99% = **99.94%**, always lower than the weakest link |
+| **High availability** | Survive a component failing (Availability Sets/Zones) |
+| **Disaster recovery** | Survive a whole region failing (paired regions, geo-replication) |
+| **Region pair** | Two regions in the same geography, updated one at a time, recovered in priority order |
+| **Availability Zone** | Physically separate datacenter within a region — SLA jumps to 99.99% for zone-redundant VMs |
+| **SLA math** | Chained services multiply: 99.95% × 99.99% = **99.94%** — composite SLAs are always lower than the weakest link |
 
-And the three deployment models, in one line each:
+## Deployment models in one line each
 
-- **Public cloud** — shared provider infrastructure, pay as you go.
-- **Private cloud** — dedicated infrastructure, run by you (on-premises or hosted).
-- **Hybrid cloud** — both connected together (for example with VPN Gateway, ExpressRoute or Azure Arc). This is where most enterprises really are.
+- **Public cloud** — shared provider infrastructure, pay-as-you-go.
+- **Private cloud** — dedicated infrastructure, yours to run (on-prem or hosted).
+- **Hybrid** — both, connected (Azure Arc, ExpressRoute, VPN Gateway). This is where most enterprises really live.
 
-&nbsp;
-<h3><strong>Summary</strong></h3>
-Choosing a cloud model comes down to one question: what are you willing to patch at 2 a.m.? If the answer is nothing, go with SaaS or serverless. If it is only your code, go with PaaS. If you really need the operating system, take IaaS and the work that comes with it. If you are preparing for AZ-900 too, the official <a href="https://docs.microsoft.com/en-us/learn/certifications/azure-fundamentals/" target="_blank" rel="noopener">Azure Fundamentals page</a> links to free Microsoft Learn paths that cover all of these concepts and is a great place to start.
+## The takeaway
+
+Choose the model by **what you're willing to patch at 2 a.m.** If the answer is "nothing," go SaaS or serverless. If it's "just my code," go PaaS. If you need the OS, take IaaS — and take the patching that comes with it.

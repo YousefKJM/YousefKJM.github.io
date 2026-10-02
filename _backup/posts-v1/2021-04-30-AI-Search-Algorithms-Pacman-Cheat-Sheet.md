@@ -1,20 +1,13 @@
 ---
-title: "AI Search Algorithms Explained with Pac-Man"
-excerpt: "In this article I would like to explain the classic AI search algorithms — DFS, BFS, UCS and A* — plus heuristics, minimax for adversarial games and Q-learning, using the Pac-Man agent project I built with my team as the example."
-header:
-  image: /images/posts/ai-search/search_comparison.png
+title: "AI Search, Explained Through Pac-Man: BFS to A* to Q-Learning"
+excerpt: "One generic search function, four data structures, four algorithms. Plus heuristics that don't lie, adversarial search for the ghosts, and the Q-learning update in one line — the AI fundamentals from a Pac-Man agent project, as a reference you'll reuse."
 ---
 
-<p align="center">
-<img src="/images/posts/ai-search/search_comparison.png" alt="DFS, BFS, UCS and A* compared on the same maze" style="margin-inline:auto;"/>
-</p>
+One of my favorite university projects (team of four) was building agents for Pac-Man: navigate the maze, eat food efficiently, survive the ghosts. It's the cleanest possible tour of classical AI — search, heuristics, adversarial reasoning, and reinforcement learning, all in one game.
 
-<h3><strong>Short introduction</strong></h3>
-One of my favourite university projects was building intelligent agents for Pac-Man, together with a team of four. The agent had to find its way through a maze, eat all the food efficiently and avoid the ghosts. It sounds like a game, but it is actually a complete tour of classical AI: search, heuristics, adversarial reasoning and reinforcement learning. In this article I would like to explain these ideas step by step. To make it visual, I ran the four search algorithms on the same maze — the picture above shows which cells each one explored before finding the goal.
+## The big idea: every search is the same loop
 
-&nbsp;
-<h3><strong>Every search is the same loop</strong></h3>
-Lets start with the most important idea: BFS, DFS, UCS and A* are all the <strong>same algorithm</strong>. The only difference is which node from the frontier is expanded next. Here is the generic graph search:
+The only thing that changes between BFS, DFS, UCS and A* is **which frontier node you expand next.** Swap the data structure, get a different algorithm.
 
 ```python
 def graph_search(problem, frontier):
@@ -32,8 +25,6 @@ def graph_search(problem, frontier):
                 frontier.push((nxt, path + [action], cost + step))
     return None
 ```
-
-Change the data structure behind `frontier`, and you get a different algorithm:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 230" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Four algorithms, four frontiers: DFS uses a stack, BFS a queue, UCS a priority queue on path cost g, A star a priority queue on g plus heuristic h">
@@ -88,47 +79,29 @@ ucs   = lambda p: graph_search(p, PriorityQueueWithFunction(lambda n: n[2]))
 astar = lambda p, h: graph_search(p, PriorityQueueWithFunction(lambda n: n[2] + h(n[0], p)))
 ```
 
-&nbsp;
-<h3><strong>What the experiment shows</strong></h3>
-I ran exactly this code on the maze in the picture at the top. The yellow area is a "ghost zone" where every step costs 5 instead of 1. These are the results:
+Four algorithms, one function. That's the whole insight.
 
-| Algorithm | Nodes expanded | Path cost | Optimal? |
-|---|---|---|---|
-| DFS | 106 | 60 | ❌ |
-| BFS | 134 | 56 | ✅ (here, because it avoided the costly zone by luck of the maze) |
-| UCS | 117 | 56 | ✅ |
-| A* (Manhattan distance) | **87** | 56 | ✅ |
+## Heuristics: the part that's actually hard
 
-As you can see:
+A* is only as good as `h(n)`, your estimate of remaining cost.
 
-1. **DFS** dives deep in one direction and returns the first path it finds — here 4 steps longer than needed.
-2. **BFS** finds the path with the fewest steps, but it ignores step costs, so it happily explores inside the costly ghost zone.
-3. **UCS** always expands the cheapest path so far, so it is optimal even with different costs.
-4. **A\*** finds the same optimal path as UCS while expanding the fewest nodes, because the heuristic guides it toward the goal. Look at the bottom-right picture: most of the maze stays white (unexplored).
-
-&nbsp;
-<h3><strong>Heuristics: the hard part</strong></h3>
-A* is only as good as its heuristic `h(n)` — the estimate of the remaining cost to the goal. Two properties matter:
-
-| Property | Meaning | Guarantee |
+| Property | Means | Guarantees |
 |---|---|---|
-| **Admissible** | Never overestimates: `h(n) ≤ real cost` | A* finds the optimal path |
-| **Consistent** | `h(n) ≤ step(n → n') + h(n')` | A* graph search stays optimal and never re-opens nodes |
-| `h = 0` | Admissible, but gives no information | A* becomes UCS |
-
-For a grid without diagonal moves, Manhattan distance is admissible:
+| **Admissible** | Never overestimates: `h(n) ≤ true cost` | A* tree search is optimal |
+| **Consistent** | `h(n) ≤ step(n→n') + h(n')` (triangle inequality) | A* graph search is optimal; nodes never need re-opening |
+| `h = 0` | Trivially admissible | A* degenerates into UCS |
 
 ```python
-def manhattan(state, problem):
+def manhattan(state, problem):                     # admissible on a grid with no diagonal moves
     (x1, y1), (x2, y2) = state, problem.goal
     return abs(x1 - x2) + abs(y1 - y2)
 ```
 
-> **_NOTE:_**  In the food-eating part of the project, "distance to the <em>nearest</em> food" is admissible but weak. "Distance to the <em>farthest</em> food" is still admissible — Pac-Man has to reach it eventually — and much stronger. The best heuristic is the tightest estimate that still never overestimates.
+**The food-eating trap:** "distance to the *nearest* dot" is admissible but weak. "Distance to the *farthest* dot" is still admissible (you must reach it eventually) and far stronger — it expands noticeably fewer nodes, and using true maze distance instead of Manhattan tightens it further. A good heuristic is the **tightest estimate that still never lies.**
 
-&nbsp;
-<h3><strong>Adversarial search: when the ghosts fight back</strong></h3>
-The maze doesn't move, but ghosts do. Now Pac-Man has to think about what the ghosts will do, and we are searching a <strong>game tree</strong>:
+## Adversarial search: when the ghosts fight back
+
+Ghosts aren't a static maze — they move. Now you're searching a game tree.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 200" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Minimax tree: a max node for Pac-Man picks the highest of its min children; each min node for a ghost picks the lowest leaf score">
@@ -159,33 +132,37 @@ def minimax(state, depth, agent):
     if depth == 0 or state.is_terminal():
         return evaluate(state)
     nxt = (agent + 1) % state.num_agents
-    d   = depth - 1 if nxt == 0 else depth            # one ply = every agent moved once
+    d   = depth - 1 if nxt == 0 else depth            # one ply = everyone moves once
     scores = [minimax(state.after(agent, a), d, nxt) for a in state.legal_actions(agent)]
     return max(scores) if agent == 0 else min(scores) # Pac-Man maximizes, ghosts minimize
 ```
 
-There are three versions worth knowing:
+| Variant | Assumes ghosts… | Use it when |
+|---|---|---|
+| **Minimax** | Play perfectly against you | Worst-case safety |
+| **Alpha-beta** | Same, but skips branches that can't change the answer | Always — same result, far fewer nodes (the `9` above is never evaluated: MIN already has a 2, and MAX already has a 3) |
+| **Expectimax** | Move randomly; take the *average* | Real ghosts are dumb — minimax makes Pac-Man too scared to eat |
 
-1. **Minimax** — assumes the ghosts play perfectly against you. Safe, but very cautious.
-2. **Alpha-beta pruning** — the same result as minimax, but it skips branches that cannot change the decision. In the tree above, once the right MIN node sees the value 2, it is already worse than the 3 that MAX has, so the leaf 9 is never evaluated.
-3. **Expectimax** — assumes the ghosts move randomly and uses the <em>average</em>. Real ghosts are not perfect, so expectimax makes Pac-Man braver — and it usually scores more against them.
+## Reinforcement learning: learning without a map
 
-&nbsp;
-<h3><strong>Reinforcement learning: learning without a map</strong></h3>
-In the last part of the project, Pac-Man had no model of the maze at all. It plays, receives rewards (for example +10 for food, +500 for winning, −500 for being caught), and learns a value for each state and action. This is <strong>Q-learning</strong>, and the whole algorithm is one line:
+No model of the maze, no known rewards. Pac-Man plays, gets rewarded (+10 dot, +500 win, −500 caught), and learns a value for each state-action pair:
 
 ```python
+# Q-learning update — the whole algorithm in one line
 Q[s][a] += alpha * (reward + gamma * max(Q[s2].values()) - Q[s][a])
 ```
 
-| Parameter | What it controls | Typical value |
+| Knob | Controls | Typical |
 |---|---|---|
-| `alpha` (learning rate) | How fast new experience replaces old knowledge | 0.2–0.5 |
-| `gamma` (discount) | How much future rewards matter | 0.8–0.99 |
-| `epsilon` (exploration) | Chance of a random move instead of the best known one | Start high, decay to ~0.05 |
+| `alpha` (learning rate) | How fast new experience overwrites old | 0.2–0.5 |
+| `gamma` (discount) | How much future reward matters | 0.8–0.99 |
+| `epsilon` (exploration) | Chance of a random move instead of the best known one | Start high, decay toward 0.05 |
 
-On a big maze, a table with a value for every state is too large. <strong>Approximate Q-learning</strong> solves this by learning weights for features (distance to the nearest food, ghosts one step away, …) instead of every state — the same idea that later grew into deep reinforcement learning.
+Tabular Q-learning breaks on big mazes — too many states. **Approximate Q-learning** fixes it by learning weights over features (distance to nearest food, ghosts one step away, …) instead of a value for every state. That generalization step is the bridge from classic RL to deep RL.
 
-&nbsp;
-<h3><strong>Summary</strong></h3>
-Classical AI search is one loop where the frontier decides the algorithm: a stack gives DFS, a queue gives BFS, a priority queue on cost gives UCS, and adding a heuristic gives A*. With an admissible heuristic A* stays optimal, and the experiment above shows how many fewer nodes it needs. When opponents appear, use minimax with alpha-beta (or expectimax for imperfect opponents), and when there is no model at all, Q-learning lets the agent learn from rewards. If you want to try it yourself, the Pac-Man projects from <a href="http://ai.berkeley.edu/project_overview.html" target="_blank" rel="noopener">UC Berkeley's CS188</a> are a great place to start.
+## The one-page summary
+
+- Search = one loop; **the frontier decides the algorithm.**
+- A* = UCS + a heuristic. **Admissible = optimal. Tighter = faster.**
+- Opponents → minimax; **always add alpha-beta**; use expectimax when opponents aren't optimal.
+- No model → **Q-learning**; big state space → features.

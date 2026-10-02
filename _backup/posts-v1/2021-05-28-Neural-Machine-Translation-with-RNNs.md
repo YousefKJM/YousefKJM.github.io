@@ -1,38 +1,29 @@
 ---
-title: "Neural Machine Translation with RNNs in Keras"
-excerpt: "In this article I would like to present the English-to-French translator I built with recurrent neural networks in Keras — comparing a simple RNN, embeddings, a bidirectional RNN, an encoder-decoder and a combined model, with the real validation results and why the simplest upgrade won."
-header:
-  image: /images/posts/machine-translation/rnn.png
+title: "Neural Machine Translation with RNNs: Five Architectures, One Surprising Winner"
+excerpt: "English to French with Keras — a simple RNN, embeddings, a bidirectional RNN, an encoder-decoder, and a combined model, trained on the same 137k sentence pairs. The real validation numbers, and why the 'most advanced' model didn't win."
 ---
 
-<p align="center">
-<img src="/images/posts/machine-translation/rnn.png" alt="Recurrent neural network for translation" style="margin-inline:auto;"/>
-</p>
+For an individual project I built an English→French translator, comparing five recurrent architectures on the same data. The code is on [GitHub](https://github.com/YousefKJM/P2-Machine-Translation). The results taught me more than the architecture diagrams did.
 
-<h3><strong>Short introduction</strong></h3>
-In the [previous article](/HMM-Part-of-Speech-Tagging-with-Viterbi/) we tagged words with a statistical model built from counts. Machine translation is a much harder sequence problem: the model has to read a whole sentence in one language and write it in another, where words can change order and the number of words can be different. For an individual project, I built an <strong>English → French translator</strong> with recurrent neural networks (RNNs) in Keras, and compared five architectures on the same data. In this article I would like to walk you through the project and share the real results — which taught me more than the architecture diagrams did. The code is available on <a href="https://github.com/YousefKJM/P2-Machine-Translation" target="_blank" rel="noopener">GitHub</a>.
+## How machine translation got here
 
-&nbsp;
-<h3><strong>A short history of machine translation</strong></h3>
-Before building anything, the project started by looking at how machine translation evolved:
-
-| Era | Approach | Idea | Weakness |
+| Era | Approach | Core idea | Weakness |
 |---|---|---|---|
-| 1950s–80s | **Rule-based** | Linguists write grammar rules and dictionaries by hand | Doesn't scale; every exception needs a new rule |
-| 1990s–2014 | **Statistical** | Learn phrase translation probabilities from parallel texts | Translates phrase by phrase, clumsy word order |
-| — | **Example-based** | Translate by analogy with stored sentence pairs | Limited to what was seen before |
-| 2014+ | **Neural** | One network reads the whole sentence and writes the whole translation | Needs a lot of data |
+| 1950s–80s | **Rule-based** | Linguists hand-write grammar and dictionaries | Doesn't scale; every exception is a new rule |
+| 1990s–2014 | **Statistical (SMT)** | Learn phrase-translation probabilities from parallel text | Translates phrase by phrase; clunky word order |
+| — | **Example-based** | Translate by analogy to stored sentence pairs | Coverage limited to what's been seen |
+| 2014+ | **Neural (NMT)** | One network reads the whole sentence, writes the whole translation | Data-hungry; long sentences hard without attention |
 
-&nbsp;
-<h3><strong>The data and preprocessing</strong></h3>
-The dataset has <strong>137,860 English–French sentence pairs</strong> with a small vocabulary, for example:
+## The data and preprocessing
+
+137,860 English–French sentence pairs from a deliberately small vocabulary:
 
 ```
 new jersey is sometimes quiet during autumn , and it is snowy in april .
 new jersey est parfois calme pendant l' automne , et il est neigeux en avril .
 ```
 
-Lets prepare the data. Neural networks work with numbers, not words, so every pipeline needs the same three steps — turn words into ids, make all sentences the same length, and reshape the labels:
+Three preprocessing steps, every NMT pipeline:
 
 ```python
 from keras.preprocessing.text import Tokenizer
@@ -40,20 +31,18 @@ from keras.preprocessing.sequence import pad_sequences
 
 def tokenize(sentences):
     tk = Tokenizer()
-    tk.fit_on_texts(sentences)                    # word -> integer id
+    tk.fit_on_texts(sentences)                    # word → integer id
     return tk.texts_to_sequences(sentences), tk
 
 def pad(seqs, length=None):
-    return pad_sequences(seqs, maxlen=length, padding="post")   # zeros at the end
+    return pad_sequences(seqs, maxlen=length, padding="post")   # equal length, zeros at the end
 
 x, x_tk = tokenize(english);  x = pad(x)
 y, y_tk = tokenize(french);   y = pad(y)
-y = y.reshape(*y.shape, 1)    # sparse_categorical_crossentropy needs this extra dimension
+y = y.reshape(*y.shape, 1)    # sparse_categorical_crossentropy wants a trailing dim
 ```
 
-&nbsp;
-<h3><strong>The five models</strong></h3>
-In this section we will build the models one by one. Each one adds one idea to the previous one:
+## The five architectures
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 310" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Five model architectures as layer stacks: simple RNN; embedding plus RNN; bidirectional RNN; encoder-decoder with a repeat vector bottleneck; final model combining embedding, bidirectional encoder, bottleneck and bidirectional decoder">
@@ -91,27 +80,23 @@ In this section we will build the models one by one. Each one adds one idea to t
 </svg>
 </div>
 
-<strong>1. Simple RNN</strong> — a GRU layer reads the word ids and a dense softmax layer predicts a French word at every position. This is the baseline, shown in the picture at the top of the article.
+| Model | What it adds | Why it should help |
+|---|---|---|
+| 1 Simple RNN | A GRU reading word ids | Baseline — learns word-to-word mapping |
+| 2 Embedding | Dense word vectors instead of raw ids | Similar words get similar representations |
+| 3 Bidirectional | Reads the sentence both ways | Each position sees left *and* right context |
+| 4 Encoder-decoder | Compress the whole sentence, then generate | Input and output lengths no longer tied |
+| 5 Final | Embedding + bidirectional encoder-decoder | All of the above together |
 
-<strong>2. Embedding</strong> — instead of raw ids, every word becomes a learned vector, so similar words get similar representations:
-
-<img src="/images/posts/machine-translation/embedding.png" alt="Embedding layer" width="560" style="margin-inline:auto;" />
-
-<strong>3. Bidirectional RNN</strong> — the sentence is read in both directions, so every position sees the words before and after it:
-
-<img src="/images/posts/machine-translation/bidirectional.png" alt="Bidirectional RNN" width="600" style="margin-inline:auto;" />
-
-<strong>4. Encoder-decoder</strong> — the encoder compresses the whole sentence into one vector, and the decoder generates the translation from it. This removes the requirement that input and output have the same length.
-
-<strong>5. Final model</strong> — all of the above together. This is the Keras code:
+The final model in Keras:
 
 ```python
 def model_final(input_shape, output_len, en_vocab, fr_vocab):
     inputs = Input(shape=input_shape[1:])
     x = Embedding(input_dim=en_vocab, output_dim=output_len)(inputs)
-    x = Bidirectional(GRU(output_len))(x)                      # encoder -> one sentence vector
+    x = Bidirectional(GRU(output_len))(x)                      # encoder → one sentence vector
     x = Dense(512, activation="relu")(x)
-    x = RepeatVector(output_len)(x)                            # give that vector to every output step
+    x = RepeatVector(output_len)(x)                            # hand that vector to every output step
     x = Bidirectional(GRU(512, return_sequences=True))(x)      # decoder
     outputs = TimeDistributed(Dense(fr_vocab, activation="softmax"))(x)
 
@@ -121,9 +106,7 @@ def model_final(input_shape, output_len, en_vocab, fr_vocab):
     return model
 ```
 
-&nbsp;
-<h3><strong>The results</strong></h3>
-These are the real validation accuracies from my notebook:
+## The results — real numbers
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 260" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Validation accuracy: simple RNN 81.9 percent after 20 epochs; embedding 91.7 percent after 15; bidirectional 68.7 percent after 10; encoder-decoder 63.8 percent after 15; final model 77.3 percent after 10 epochs and 88.9 percent after 20">
@@ -147,16 +130,18 @@ These are the real validation accuracies from my notebook:
 </svg>
 </div>
 
-As you can see, the winner was <strong>not</strong> the most advanced model. Simply adding an embedding layer took the plain GRU from 81.9% to <strong>91.7%</strong> — better than every more complex architecture with the training each one got. The final model was still improving at 20 epochs (77.3% → 88.9%), so with more training it would probably pass it.
+**The "simplest upgrade" won.** Adding an embedding layer took a plain GRU from 81.9% to **91.7%** — better than every more sophisticated architecture under the training budget each got. The final combined model was still climbing at 20 epochs (77.3% → 88.9%) and would likely pass it with more training.
 
-What do these numbers tell us?
+## What the numbers actually say
 
-1. **Embeddings are the most valuable change.** Raw ids suggest that "word 41 is close to word 42", which means nothing. Learned vectors fix the representation, and everything after it improves.
-2. **Encoder-decoder models learn slowly at the start.** Squeezing the whole sentence into one 512-number vector is powerful, but at 15 epochs it was actually the worst model.
-3. **Compare models with the same training budget.** My models were trained for different numbers of epochs, so this ranking is "under these budgets", not a general rule.
-4. **The dataset decides a lot.** With a small vocabulary and very similar sentences, words map almost one-to-one, which is exactly what embedding + GRU is good at. On real text with long sentences and word reordering, encoder-decoder models with <strong>attention</strong> win clearly.
+1. **Embeddings are the highest-value change.** Raw integer ids imply "word 41 is close to word 42," which is nonsense. Learned vectors fix the representation, and everything downstream improves.
+2. **Bottleneck architectures are slow starters.** The encoder-decoder squeezes the entire sentence through one 512-dim vector. That's powerful for variable-length translation, but it takes many more epochs to learn — at 15 epochs it was the *worst* model.
+3. **Compare at equal training budgets, or you're comparing training time, not architectures.** My epoch counts differed per model, so treat the ranking as "under these budgets," not as a law.
+4. **The dataset shapes the winner.** With a tiny vocabulary and near-identical sentence templates, word-to-word alignment is almost one-to-one — exactly what a simple embedding+GRU model is good at. On real-world text with reordering and long sentences, the encoder-decoder (plus **attention**) wins decisively.
 
-> **_NOTE:_**  The model outputs a probability for every French word at every position. To read the translation, take the most likely word at each position and map the ids back to words, skipping the padding:
+## Reading predictions back
+
+The model outputs a probability distribution per position. Take the argmax and map ids back to words:
 
 ```python
 def logits_to_text(logits, tokenizer):
@@ -166,6 +151,10 @@ def logits_to_text(logits, tokenizer):
                     if index_to_word[i] != "<PAD>")
 ```
 
-&nbsp;
-<h3><strong>Summary</strong></h3>
-Building five translation models on the same data showed that architecture diagrams don't tell the whole story: the embedding layer gave the biggest improvement, the encoder-decoder needed much more training, and the dataset itself favoured the simpler model. The natural next steps are attention, beam search instead of choosing the single best word, the BLEU score for evaluation, and finally Transformers, which removed recurrence completely. The full notebook is on <a href="https://github.com/YousefKJM/P2-Machine-Translation" target="_blank" rel="noopener">GitHub</a>; the architecture diagrams in this article come from the project template provided by Udacity (MIT licence).
+## Where to go from here
+
+- **Attention** — let the decoder look back at every encoder state instead of one compressed vector. This is the single biggest jump in NMT quality.
+- **Teacher forcing** — feed the decoder the correct previous word during training.
+- **Beam search** — keep the top-k partial translations instead of greedy argmax at each step.
+- **BLEU score** — accuracy per token is a proxy; BLEU is what the MT field actually reports.
+- **Transformers** — drop recurrence entirely. The foundation of everything since 2017.

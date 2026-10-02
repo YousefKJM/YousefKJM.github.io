@@ -1,13 +1,20 @@
 ---
-title: "Writing a Two-Pass Assembler and Simulator for a Custom CPU (in Java)"
-excerpt: "Hand-translating assembly to hex for a homemade CPU is miserable, so I wrote a tool to do it. How a two-pass assembler resolves labels, how instructions become bits, how the same objects run as a simulator — with worked encodings you can check by hand."
+title: "Writing an Assembler and Simulator for Our Custom CPU in Java"
+excerpt: "In this article I would like to present the assembler and simulator I wrote for our pipelined processor — how a two-pass assembler resolves labels, how instructions become bits, and how the same code runs as a simulator to check the hardware."
+header:
+  image: /images/posts/assembler-simulator/simulator-result.png
 ---
 
-After my team built a [pipelined RISC processor](/Building-a-Pipelined-RISC-Processor/) in Logisim, testing it meant translating every program into 16-bit hex by hand. One wrong bit and you're debugging the CPU for a typo in your own arithmetic. So, as a solo bonus project, I wrote an **assembler and simulator** in Java with a JavaFX/Swing UI. The code is on [GitHub](https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor).
+<p align="center">
+<img src="/images/posts/assembler-simulator/assembler-input.png" alt="ICS233 Project Assembler" width="532" style="margin-inline:auto;"/>
+</p>
 
-This post is the design, so you can build one for your own ISA.
+<h3><strong>Short introduction</strong></h3>
+In my <a href="/Building-a-Pipelined-RISC-Processor/">previous article</a> I presented the 32-bit pipelined processor my team built in Logisim. To test it, every program had to be translated by hand into 16-bit hexadecimal instructions and loaded into the instruction memory. One wrong bit, and you spend an hour debugging the CPU when the real problem is a typo in your own arithmetic. So as a bonus part of the project, I wrote an <strong>assembler and simulator</strong> in Java with a Swing user interface. In this article I would like to explain how it works, so you can build one for your own instruction set. The code is available on <a href="https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor" target="_blank" rel="noopener">GitHub</a>.
 
-## The pipeline of the tool itself
+&nbsp;
+<h3><strong>How the tool works</strong></h3>
+Before going into the code, lets look at the big picture:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 200" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Tool flow: assembly source goes through pass one parsing to build a label map and instruction list, pass two encoding to produce hex, which loads into the Logisim CPU; the simulator decodes the same hex and executes it in software">
@@ -36,34 +43,43 @@ This post is the design, so you can build one for your own ISA.
 </svg>
 </div>
 
-That last box is the real payoff. The simulator is a **reference implementation**: run a program in both, and any register that disagrees points straight at a hardware bug.
+The assembler reads the source program in two passes and produces a hex image that can be loaded directly into the Logisim CPU. The simulator then decodes the same hex and runs it in software. That last part is the most useful one: the simulator is a <strong>reference</strong>. If you run the same program in Logisim and in the simulator and a register is different, you know the bug is in the hardware.
 
-## Source syntax (keep it parseable)
-
-```
-<label:>  <TAB>  mnemonic  args  ;  comment
-```
+&nbsp;
+<h3><strong>Using the assembler</strong></h3>
+The screenshot at the top of this article shows the main window with a small program loaded. It counts how many bits are set to 1 in the value stored at memory address 0:
 
 ```
-ForLoop:  nadd $5, $0, $1 ;
-          beqz $5, EndForLoop ;
-          addi $2, $1, 0 ;
-          lw   $3, 0($2) ;
+        xor  $2, $2, $2 ;     $2 = counter = 0
+        lw   $1, 0($0) ;      $1 = memory[0]
+Next:   andi $3, $1, 1 ;      take the lowest bit
+        add  $2, $2, $3 ;     add it to the counter
+        srl  $1, $1, 1 ;      shift right
+        bnez $1, Next ;       repeat until $1 is zero
 ```
 
-Two rules made the parser trivial: **the first column is reserved for a label** (leading whitespace means "no label"), and **every instruction ends with `;`** (anything after it is a comment). A grammar this rigid isn't elegant, but it means one `split` handles every line.
+The syntax is strict on purpose, because it keeps the parser simple:
 
-## Pass 1: parse and record labels
+1. The first column is reserved for a label. If there is no label, the line starts with a tab or spaces.
+2. Every instruction ends with a semicolon `;`. Anything after it is a comment.
 
-Why two passes? A forward branch (`beqz $5, EndForLoop`) references a label you haven't seen yet. Pass 1 walks the file once and records **where every label lives**; pass 2 can then resolve any reference.
+You can type the program or click "Load an Assembly File". Once you click "Assemble", the tool assembles the code, writes the output file and runs it in the simulator. A second window opens with the result:
+
+<img src="/images/posts/assembler-simulator/simulator-result.png" alt="Simulator result window" width="551" style="margin-inline:auto;" />
+
+The first box shows the generated machine code in Logisim's memory image format (`v2.0 raw`), ready to load into the instruction memory. The table shows the registers after the program finished. The tool preloads `memory[0] = 5`, which is `101` in binary, so the expected result is two 1-bits — and as you can see, `Regfile[2] = 2`.
+
+&nbsp;
+<h3><strong>Pass 1: parse and record labels</strong></h3>
+Why two passes? Look at the branch `bnez $1, Next`. In this example `Next` is above the branch, but a forward branch like `beqz $5, EndLoop` refers to a label we haven't seen yet. So the first pass walks through the whole file and records <strong>where every label is</strong>. Then the second pass can resolve any reference:
 
 ```java
-int lineNo = 0, stepNo = 0;           // lineNo: source line (for errors); stepNo: instruction address
+int lineNo = 0, stepNo = 0;   // lineNo: source line (for errors), stepNo: instruction address
 while (scanner.hasNext()) {
     lineNo++;
     String line = scanner.nextLine();
-    String code = line.split(";", 2)[0];            // strip comment
-    if (code.trim().isEmpty()) continue;            // blank / comment-only line
+    String code = line.split(";", 2)[0];            // remove the comment
+    if (code.trim().isEmpty()) continue;            // empty or comment-only line
 
     String[] parts = code.split("[\t ]+", 3);       // [label:] mnemonic args
     String label = parts[0].trim();
@@ -78,16 +94,16 @@ while (scanner.hasNext()) {
             Instruction.getInstByMnemonic(parts[1].trim()), lineNo, stepNo);
         inst.parseArgs(parts[2].trim().split(",[\t ]*"));
         instList.add(inst);
-        stepNo++;                                   // only real instructions advance the address
+        stepNo++;                                   // only real instructions move the address
     }
 }
 ```
 
-The detail that matters: **two counters.** `lineNo` counts source lines so error messages point at the right line in the editor. `stepNo` counts only instructions, because that's the address a label actually resolves to.
+Notice the <strong>two counters</strong>. `lineNo` counts every source line, so error messages point to the correct line in the editor. `stepNo` counts only instructions, because that is the address a label really refers to.
 
-## Pass 2: instructions become bits
-
-Every mnemonic is an enum entry carrying its opcode (and function code for R-type). Encoding is concatenating fixed-width binary fields:
+&nbsp;
+<h3><strong>Pass 2: instructions become bits</strong></h3>
+Every instruction is an enum entry that knows its opcode (and function code for R-type). Encoding is just joining fixed-width binary fields:
 
 ```java
 String bits = toBinary(opcode, 5);
@@ -99,48 +115,19 @@ switch (format) {
 }
 ```
 
-`labelMap.get(target) - stepNo` is the label resolution: branches and jumps store a **signed offset relative to the current instruction**, not an absolute address. Backward jumps produce negative offsets, encoded in two's complement within the field.
-
-### Worked encodings — check them by hand
+The expression `labelMap.get(target) - stepNo` is where labels are resolved. Branches and jumps store a <strong>signed offset from the current instruction</strong>, not an absolute address. We can check this with the real output from the screenshot above:
 
 | Assembly | Fields | Binary | Hex |
 |---|---|---|---|
-| `add $2, $3, $4` | op=1 · rs=3 · rt=4 · rd=2 · f=0 | `00001 011 100 010 00` | `0B88` |
-| `addi $2, $3, 5` | op=8 · rs=3 · rt=2 · imm5=5 | `01000 011 010 00101` | `4345` |
-| `beqz $5, +4` | op=20 · rs=5 · imm8=4 | `10100 101 00000100` | `A504` |
-| `j -3` | op=30 · imm11=−3 | `11110 11111111101` | `F7FD` |
+| `xor $2, $2, $2` | op=0 · rs=2 · rt=2 · rd=2 · f=3 | `00000 010 010 010 11` | `024b` |
+| `lw $1, 0($0)` | op=16 · rs=0 · rt=1 · imm5=0 | `10000 000 001 00000` | `8020` |
+| `bnez $1, Next` | op=21 · rs=1 · imm8=−3 | `10101 001 11111101` | `a9fd` |
 
-Note the R-type quirk: the assembly order is `rd, rs, rt`, but the bit order is `rs, rt, rd`. That mismatch is exactly the kind of thing that's easy to botch by hand and impossible to botch in code once it's right.
+`Next` is instruction 2 and `bnez` is instruction 5, so the offset is 2 − 5 = −3, stored in two's complement as `11111101`. Also notice that in assembly the order is `rd, rs, rt`, but in the bits it is `rs, rt, rd` — exactly the kind of detail that is easy to get wrong by hand and impossible to get wrong once the code is correct.
 
-### Range checks belong in the assembler
-
-An `imm5` holds −16…15 signed. A branch `imm8` reaches −128…127 instructions. If a loop body grows past that, the encoding silently wraps. Throw an error instead:
-
-```java
-if (offset < -128 || offset > 127)
-    throw new SyntaxException("Branch target out of range (" + offset + ")", lineNo);
-```
-
-## Output formats
-
-The same instruction list emits two formats:
-
-```
- 0 :    0B88; % (00) %        ← listing: address, hex, comment — human-readable
- 1 :    4345; % (01) %
- 2 :    A504; % (02) %
-```
-
-```
-v2.0 raw
-0B88 4345 A504 ...            ← Logisim memory image: right-click ROM → Load Image
-```
-
-Supporting the exact format your hardware tool loads is what turns "an assembler" into "something people actually use."
-
-## The simulator: the same objects, executed
-
-Each `Instruction` object knows how to **run itself** against a register file and memory, returning the next PC:
+&nbsp;
+<h3><strong>The simulator</strong></h3>
+Here is the nice part: each `Instruction` object also knows how to <strong>run itself</strong> on a register file and memory, and returns the next PC:
 
 ```java
 public int run(int pc, RegisterFile r, Memory m) {
@@ -151,7 +138,7 @@ public int run(int pc, RegisterFile r, Memory m) {
         case CAND: r.set(rd, ~r.get(rs) & r.get(rt));  break;
         case LW:   r.set(rt, m.read(r.get(rs) + imm5));  break;
         case SW:   m.write(r.get(rs) + imm5, r.get(rt)); break;
-        case BEQZ: if (r.get(rs) == 0) next = pc + imm8; break;
+        case BNEZ: if (r.get(rs) != 0) next = pc + imm8; break;
         case JAL:  r.set(7, pc + 1); next = pc + imm11;  break;
         case SET:  r.set(0, imm11);                       break;
         case SSET: r.set(0, (r.get(0) << 11) | imm11);    break;
@@ -160,40 +147,35 @@ public int run(int pc, RegisterFile r, Memory m) {
 }
 ```
 
-And the simulator loop is just fetch → execute → repeat, on its own thread so the UI stays responsive and a runaway loop can be killed:
+The simulator loop is just fetch, execute, repeat. It runs on its own thread, so the window stays responsive and an endless loop can be killed after a few seconds:
 
 ```java
 public void run() {
     while (!kill) {
-        if (pc == instList.size()) return;           // fell off the end: program finished
+        if (pc == instList.size()) return;           // end of the program
         pc = instList.get(pc).run(pc, regfile, memory);
         Thread.yield();
     }
 }
 ```
 
-The simulator is **not** cycle-accurate — it doesn't model the pipeline. That's deliberate. It models what the program *should* compute, which is exactly what you want as a reference for a pipeline that might be computing it wrong.
+> **_NOTE:_**  The simulator is not cycle-accurate — it doesn't simulate the pipeline. That is on purpose. It shows what the program <em>should</em> compute, which is exactly what you want when you are checking a pipeline that may compute it wrong.
 
-## Error handling is the UX
+&nbsp;
+<h3><strong>Error messages</strong></h3>
+Students (including me) write broken assembly all the time, so good error messages matter more than anything else in a tool like this. Each kind of problem has its own exception with the line number. For example, if I forget an argument in an `add` instruction:
 
-Students (including me) write broken assembly constantly. Each failure mode got its own exception, carrying the source line number:
+<img src="/images/posts/assembler-simulator/assembler-error.png" alt="Assembler showing a syntax error" width="532" style="margin-inline:auto;" />
 
-| Exception | Triggered by |
+The full message is: <em>"Syntax Error: Invalid argument (Too few arguments; 3 arguments are expected, but found 2 arguments) on line 1."</em> These are the exceptions the tool uses:
+
+| Exception | When |
 |---|---|
-| `SyntaxException` | Missing `:`, missing args, label that looks like a number |
-| `InvalidArgumentException` | Register out of `$0`–`$7`, immediate out of range |
-| `LabelNotFoundException` | Jump to a label that was never defined |
-| `InvalidInstructionException` | Hex that doesn't decode to any opcode (simulator side) |
+| `SyntaxException` | Missing `:`, missing arguments, a label that looks like a number |
+| `InvalidArgumentException` | A register outside `$0`–`$7`, an immediate out of range |
+| `LabelNotFoundException` | A jump to a label that was never defined |
+| `InvalidInstructionException` | Hex that doesn't decode to any instruction (simulator side) |
 
-"Line 14: Invalid mnemonic (`addd`)" saves an hour. "Error" saves nothing.
-
-## Build your own: the checklist
-
-1. Write the ISA table first — opcode, format, field widths, semantics. The code is a transcription of it.
-2. One enum entry per instruction; opcode and format live there, not in `if` chains.
-3. Pass 1 = labels + instruction list. Pass 2 = encode. Don't try to do it in one pass.
-4. Track source line and instruction address separately.
-5. Range-check every immediate and offset.
-6. Emit the exact file format your hardware tool loads.
-7. Make instructions executable and you get a simulator almost for free.
-8. Test the assembler with hand-verified encodings, like the table above, before trusting it on the CPU.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+An assembler sounds like a big project, but for a small instruction set it comes down to a few ideas: an enum entry per instruction, a first pass that records labels, a second pass that joins binary fields, and separate counters for source lines and addresses. Make the instructions executable, and you get a simulator almost for free — a reference you can trust when the hardware doesn't behave. If you want to build one, start from your instruction set table and check your first encodings by hand, like the table above. The full source code and sample programs are on <a href="https://github.com/YousefKJM/Assembler-Simulator-for-Pipelined-Processor" target="_blank" rel="noopener">GitHub</a>.

@@ -1,33 +1,7 @@
 ---
-title: "The Software Engineering Field Kit: What Survives Contact With a Real Team"
-excerpt: "Requirements that can be tested, a Git workflow that doesn't fight you, the testing pyramid, code review rules, and a definition of done — the parts of a software engineering degree that actually earn their keep once six people share one codebase."
+title: "Software Engineering Practices That Survive a Real Team"
+excerpt: "In this article I would like to share the software engineering practices that actually helped when six of us shared one codebase — testable requirements, a clean architecture, a simple Git workflow, the testing pyramid, code review and a definition of done."
 ---
-
-My degree was in software engineering, and the capstone was InfoMagnet — a location-based media platform built by a team of six (Sails.js dashboard, native iOS and Android apps, MongoDB/Firebase). Most of the theory stayed in the textbook. These are the pieces that didn't.
-
-## 1. Requirements: if you can't test it, it isn't one
-
-| ❌ Vague | ✅ Testable |
-|---|---|
-| "The app should be fast" | "Feed loads in < 2 s on 4G for 50 items" |
-| "Users can find nearby content" | "Content within 500 m of the user's GPS position appears, sorted by distance" |
-| "The system is secure" | "Passwords stored with bcrypt; 5 failed logins lock the account for 15 min" |
-
-Write each one as a **user story with acceptance criteria**:
-
-```
-As a  content creator
-I want to pin a video to my current location
-So that people walking past can discover it
-
-Given I'm logged in and location is enabled
-When I upload a video under 100 MB
-Then it appears on the map at my position within 10 seconds
-```
-
-The "Given/When/Then" lines become your test cases directly.
-
-## 2. Design: draw the boxes before writing the code
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 170" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Layered architecture: presentation layer calls service layer, which calls data access layer, which talks to the database; dependencies only point downward">
@@ -53,26 +27,65 @@ The "Given/When/Then" lines become your test cases directly.
 </svg>
 </div>
 
-The rule that matters: **business logic never imports UI or database code directly.** It's what lets you test it without either, and what let our team build the dashboard and both mobile apps against one shared API.
+<h3><strong>Short introduction</strong></h3>
+I studied Software Engineering at KFUPM, and a lot of what we learned stayed in the textbook. The part that did not stay there came from our senior project, InfoMagnet — a location-aware media platform built by a team of six, with a Sails.js dashboard, native iOS and Android apps and a MongoDB/Firebase backend. When six people push to the same repository every day, you quickly find out which practices are useful and which ones are just theory. In this article I would like to share the ones that worked for us, step by step, from the first requirement to the moment a feature is really "done".
 
-## 3. Git workflow that doesn't fight you
+&nbsp;
+<h3><strong>Requirements: if you can't test it, it isn't one</strong></h3>
+Lets start from requirements, because everything else depends on them. The most common problem is a requirement that sounds good but cannot be tested:
+
+| ❌ Vague | ✅ Testable |
+|---|---|
+| "The app should be fast" | "Feed loads in less than 2 seconds on 4G for 50 items" |
+| "Users can find nearby content" | "Content within 500 m of the user's GPS position appears, sorted by distance" |
+| "The system is secure" | "Passwords stored with bcrypt; 5 failed logins lock the account for 15 minutes" |
+
+We wrote every feature as a <strong>user story with acceptance criteria</strong>:
+
+```
+As a  content creator
+I want to pin a video to my current location
+So that people walking past can discover it
+
+Given I'm logged in and location is enabled
+When I upload a video under 100 MB
+Then it appears on the map at my position within 10 seconds
+```
+
+As you can see, the "Given / When / Then" lines are already test cases. You don't have to invent tests later — they are written together with the requirement.
+
+&nbsp;
+<h3><strong>Design: draw the boxes before writing the code</strong></h3>
+The diagram at the top of this article is the one rule of architecture I always follow: <strong>layers, and dependencies only point one way</strong>. The presentation layer calls the service layer, the service layer calls the data layer, and never the other way around.
+
+Why does it matter? Because business logic that doesn't import UI or database code can be tested without either of them. It is also what allowed our team to build the web dashboard and both mobile apps against one shared API, without copying business rules into three places.
+
+&nbsp;
+<h3><strong>Git workflow that doesn't fight you</strong></h3>
+In this section we will set up the simplest workflow that still keeps `main` safe. One branch per story, small commits, and a pull request at the end:
 
 ```bash
-git switch -c feature/geo-feed main      # one branch per story
+git switch -c feature/geo-feed main          # one branch per story
 # ...small commits...
 git commit -m "feat(feed): sort content by distance from user"
 git fetch origin && git rebase origin/main   # stay current, resolve conflicts early
-git push -u origin feature/geo-feed          # open a pull request
+git push -u origin feature/geo-feed          # then open a pull request
 ```
+
+These are the rules we agreed on:
 
 | Rule | Why |
 |---|---|
 | `main` is always deployable | Anyone can ship at any time |
-| Short-lived branches (≤ 2–3 days) | Merge conflicts grow with branch age |
-| Conventional commits (`feat:`, `fix:`, `docs:`) | Readable history, automatic changelogs |
-| Never commit secrets | `.gitignore` your `.env` on day one — history is forever |
+| Short-lived branches (2–3 days max) | Merge conflicts grow with the age of the branch |
+| Conventional commits (`feat:`, `fix:`, `docs:`) | Readable history and automatic changelogs |
+| Never commit secrets | Add `.env` to `.gitignore` on day one — Git history is forever |
 
-## 4. The testing pyramid
+> **_NOTE:_**  If you are using Azure DevOps, you can enforce some of these rules with branch policies, like a minimum number of reviewers before a pull request can be completed. I showed how to set this up in my [Azure DevOps article](/Microsoft-Azure-DevOps-for-ASP-.NET-Core-Web-apps/).
+
+&nbsp;
+<h3><strong>The testing pyramid</strong></h3>
+Once code is merged often, tests are the only thing protecting `main`. The question is which tests to write. This is the shape that works:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 230" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Testing pyramid: many fast unit tests at the base, fewer integration tests in the middle, a handful of slow end-to-end tests at the top">
@@ -90,41 +103,46 @@ git push -u origin feature/geo-feed          # open a pull request
 </svg>
 </div>
 
-Invert the pyramid — mostly UI tests, few unit tests — and your suite becomes slow, flaky, and ignored. A test that nobody runs protects nothing.
+Most tests should be fast unit tests at the bottom, some integration tests in the middle (API and database together), and only a few slow end-to-end tests at the top. If you invert it — mostly UI tests and few unit tests — the test suite becomes slow and flaky, people stop running it, and a test that nobody runs protects nothing.
+
+A good unit test checks one behaviour, needs no network and no database, and has a name that explains itself:
 
 ```python
-# A good unit test: one behaviour, no network, no database, readable name
 def test_nearby_content_excludes_items_beyond_radius():
     user = (26.30, 50.15)
     items = [Item("near", 26.301, 50.151), Item("far", 26.40, 50.30)]
     assert [i.name for i in nearby(items, user, radius_m=500)] == ["near"]
 ```
 
-## 5. Code review: rules for both sides
+&nbsp;
+<h3><strong>Code review: rules for both sides</strong></h3>
+Code review is where a team either learns together or argues together. These rules helped us stay on the first side.
 
-**Author**
-- Keep PRs under ~400 lines. Review quality collapses above that.
-- Write the PR description: *what* changed, *why*, *how you tested it*.
-- Review your own diff first. You'll catch a third of the comments yourself.
+<strong>For the author:</strong>
 
-**Reviewer**
-- Correctness and design first; style is the linter's job, not yours.
-- Ask questions instead of issuing orders: "What happens if `location` is null here?"
-- Approve when it's better than `main`, not when it's perfect.
+1. Keep pull requests under ~400 lines. Review quality drops a lot above that.
+2. Write a description: <em>what</em> changed, <em>why</em>, and <em>how you tested it</em>.
+3. Review your own diff first — you will catch around a third of the comments yourself.
 
-## 6. Definition of done
+<strong>For the reviewer:</strong>
 
-A story isn't done when the code compiles. It's done when:
+1. Focus on correctness and design first. Style is the job of the linter, not yours.
+2. Ask questions instead of giving orders: "What happens if `location` is null here?"
+3. Approve when the change makes `main` better, not when it is perfect.
+
+&nbsp;
+<h3><strong>Definition of done</strong></h3>
+The last step is agreeing on what "done" means. A story is not done when the code compiles. For us it was done when:
 
 - [ ] Acceptance criteria pass
-- [ ] Unit tests added; full suite green in CI
-- [ ] Reviewed and approved by at least one other person
-- [ ] No new linter or security-scanner warnings
-- [ ] Docs/README updated if behaviour changed
-- [ ] Deployed to staging and smoke-tested
+- [ ] Unit tests are added and the full suite is green in CI
+- [ ] At least one other person reviewed and approved it
+- [ ] No new linter or security scanner warnings
+- [ ] The README or docs are updated if the behaviour changed
+- [ ] It is deployed to staging and smoke-tested
 
-Agree on this list as a team in week one. Most "it's done but…" arguments are really disagreements about this list.
+Agree on this list in the first week. Most of the "it's done, but…" discussions in a team are really disagreements about this list.
 
-## The short version
-
-Testable requirements, one-way dependencies, short branches, a pyramid-shaped test suite, small PRs, and a written definition of done. None of it is glamorous. All of it compounds.
+&nbsp;
+<h3><strong>Summary</strong></h3>
+None of these practices is complicated: testable requirements, one-way dependencies, short branches, a pyramid-shaped test suite, small pull requests and a written definition of done. What makes them powerful is doing all of them, every time, as a team. If you want to read more, the <a href="https://www.conventionalcommits.org/" target="_blank" rel="noopener">Conventional Commits</a> specification and Martin Fowler's article on the <a href="https://martinfowler.com/articles/practical-test-pyramid.html" target="_blank" rel="noopener">practical test pyramid</a> are both great places to continue.
