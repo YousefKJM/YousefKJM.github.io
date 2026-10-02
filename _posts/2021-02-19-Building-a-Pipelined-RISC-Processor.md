@@ -1,23 +1,30 @@
 ---
-title: "Building a 5-Stage Pipelined RISC Processor in Logisim, Gate by Gate"
-excerpt: "A walkthrough of the 32-bit CPU my team designed at KFUPM: a 16-bit instruction set with four formats, a ROM-driven control unit, then the jump to a five-stage pipeline with three-way forwarding, a load-use stall, and branch flushing. Encodings, control tables, and the hazards that bite."
+title: "Building a Pipelined RISC Processor in Logisim"
+excerpt: "In this article I would like to present how my team designed a 32-bit RISC processor from scratch in Logisim — first as a single-cycle CPU, then as a five-stage pipeline with forwarding, stalling and branch flushing — using the real circuits from our project."
+header:
+  image: /images/posts/pipelined-cpu/single-cycle-datapath.png
 ---
 
-In ICS 233 (Computer Architecture & Assembly Language) at KFUPM, my team of three built a CPU from scratch in **Logisim** — first single-cycle, then pipelined. I owned the next-PC logic, the main control unit, and most of the pipelined datapath integration. The full design is on [GitHub](https://github.com/YousefKJM/Pipelined-Processor-Design). Here's how it fits together, and what I'd tell anyone attempting the same.
+<p align="center">
+<img src="/images/posts/pipelined-cpu/single-cycle-datapath.png" alt="Single cycle processor in Logisim" style="margin-inline:auto;"/>
+</p>
 
-## The spec in one glance
+<h3><strong>Short introduction</strong></h3>
+Every software engineer uses a processor all day, but very few of us build one. In the ICS 233 course (Computer Architecture &amp; Assembly Language) at KFUPM, my team of three did exactly that: we designed a <strong>32-bit RISC processor</strong> gate by gate in <a href="http://www.cburch.com/logisim/" target="_blank" rel="noopener">Logisim</a>, first as a single-cycle CPU and then as a <strong>five-stage pipelined</strong> CPU. On the pipelined design I worked on the next-PC logic, the main control unit and most of the processor integration. In this article I would like to walk you through the design step by step, using the actual circuits from our project report. The full project is available on <a href="https://github.com/YousefKJM/Pipelined-Processor-Design" target="_blank" rel="noopener">GitHub</a>.
+
+&nbsp;
+<h3><strong>The instruction set</strong></h3>
+Before drawing a single wire we had to agree on the instruction set. Here are the main properties of our processor:
 
 | Property | Value |
 |---|---|
 | Data width | 32-bit |
-| Registers | 8 general-purpose: `R0`–`R7` (so register fields are **3 bits**) |
-| Instruction width | **16-bit** — 5-bit opcode, up to 32 opcodes |
-| Memory | Word-addressed (next PC = `PC + 1`, not `+4`) |
-| Special registers by convention | `R7` = return address (`JAL`), `R0` = target of `SET`/`SSET` |
+| Registers | 8 general-purpose registers `R0`–`R7` (so each register field is 3 bits) |
+| Instruction width | **16-bit**, with a 5-bit opcode |
+| Memory | Word-addressed, so the next instruction is `PC + 1` |
+| Special registers | `R7` holds the return address for `JAL`, `R0` is the target of `SET`/`SSET` |
 
-16-bit instructions with 32-bit data is the interesting constraint. It forces small immediates and a trick for building large constants (more on `SET`/`SSET` below).
-
-## Four instruction formats
+All instructions fit in one of four formats:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 260" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Instruction formats, 16 bits each. R-type: opcode 5, rs 3, rt 3, rd 3, function 2. I-type: opcode 5, rs 3, rt 3, immediate 5. B-type: opcode 5, rs 3, immediate 8. J-type: opcode 5, immediate 11.">
@@ -66,71 +73,55 @@ In ICS 233 (Computer Architecture & Assembly Language) at KFUPM, my team of thre
 
 | Format | Opcodes | Instructions |
 |---|---|---|
-| R | 0 (`f`=0–3), 1 (`f`=0–3) | `AND CAND OR XOR` · `ADD NADD SLT SLTU` |
+| R | 0 and 1 (function 0–3) | `AND CAND OR XOR` · `ADD NADD SLT SLTU` |
 | I | 4–17 | `ANDI CANDI ORI XORI ADDI NADDI SLTI SLTUI` · `SLL SRL SRA ROR` · `LW SW` |
 | B | 20–27 | `BEQZ BNEZ BLTZ BGEZ BGTZ BLEZ` · `JR JALR` |
 | J | 28–31 | `SET SSET` · `J JAL` |
 
-Two non-MIPS instructions worth knowing:
+Two instructions are not the usual MIPS ones:
 
-- **`CAND rd, rs, rt`** → `rd = ~rs & rt` (complement-AND — bit clearing in one instruction)
-- **`NADD rd, rs, rt`** → `rd = rt − rs` (negate-add — subtraction without a separate `SUB` opcode)
+- **`CAND rd, rs, rt`** means `rd = ~rs & rt` (complement then AND)
+- **`NADD rd, rs, rt`** means `rd = rt − rs`, so we get subtraction without a separate `SUB` opcode
 
-### Building a 32-bit constant from 11-bit pieces
+> **_NOTE:_**  With only 11 bits of immediate, a 32-bit constant is built in steps: `set imm11` loads `R0 = imm11`, then every `sset imm11` does `R0 = (R0 << 11) | imm11`. It is the same idea as `lui` + `ori` in MIPS.
 
-With only 11 bits of immediate, how do you load a full 32-bit value? Two instructions:
+&nbsp;
+<h3><strong>Single cycle design</strong></h3>
+Lets start from the single-cycle processor. My advice here: build it and test it completely before you even think about the pipeline. Any bug you leave in this stage becomes much harder to find when five instructions are running at the same time.
 
-```
-set  imm11      ; R0 = imm11
-sset imm11      ; R0 = (R0 << 11) | imm11   — shift in the next 11 bits
-```
+<strong>Register file</strong>
 
-Three `SET`/`SSET` steps cover 33 bits. It's the same idea as MIPS `lui`+`ori`, adapted to a narrower instruction.
+The register file reads two registers and writes one register in the same cycle. Writing is done with a demultiplexer that enables only the selected register, and reading is done with two 8-to-1 multiplexers, one for each output (`Read Data 1` and `Read Data 2`):
 
-## Stage 1: the single-cycle datapath
+<img src="/images/posts/pipelined-cpu/register-file.png" alt="Register file circuit" style="margin-inline:auto;" />
 
-Build and **fully verify** this before touching a pipeline. Every bug you leave here gets harder to find once five instructions are in flight at once.
+<strong>Arithmetic and Logic Unit (ALU)</strong>
 
-<div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
-<svg viewBox="0 0 640 150" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Single-cycle datapath: PC feeds instruction memory, then register file and control, then ALU, then data memory, then write-back mux back to the register file">
-  <defs><marker id="cpu-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>
-  <g style="font-size:12px;">
-    <rect x="5" y="45" width="60" height="50" rx="6" fill="var(--bg-elevated-2)" stroke="var(--border)"/><text x="24" y="75" font-weight="700" fill="var(--text)">PC</text>
-    <rect x="90" y="45" width="90" height="50" rx="6" fill="var(--bg-elevated-2)" stroke="var(--border)"/><text x="102" y="68" font-weight="700" fill="var(--text)">Instr.</text><text x="102" y="84" fill="var(--text-muted)">memory</text>
-    <rect x="205" y="45" width="100" height="50" rx="6" fill="var(--bg-elevated-2)" stroke="var(--accent)" stroke-width="2"/><text x="217" y="68" font-weight="700" fill="var(--accent)">Reg file</text><text x="217" y="84" fill="var(--text-muted)">+ control ROM</text>
-    <rect x="330" y="45" width="80" height="50" rx="6" fill="var(--bg-elevated-2)" stroke="var(--border)"/><text x="355" y="75" font-weight="700" fill="var(--text)">ALU</text>
-    <rect x="435" y="45" width="90" height="50" rx="6" fill="var(--bg-elevated-2)" stroke="var(--border)"/><text x="447" y="68" font-weight="700" fill="var(--text)">Data</text><text x="447" y="84" fill="var(--text-muted)">memory</text>
-    <rect x="550" y="45" width="85" height="50" rx="6" fill="var(--bg-elevated-2)" stroke="var(--border)"/><text x="562" y="68" font-weight="700" fill="var(--text)">WB mux</text><text x="562" y="84" fill="var(--text-muted)">4 sources</text>
-    <line x1="65" y1="70" x2="86" y2="70" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#cpu-arr)"/>
-    <line x1="180" y1="70" x2="201" y2="70" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#cpu-arr)"/>
-    <line x1="305" y1="70" x2="326" y2="70" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#cpu-arr)"/>
-    <line x1="410" y1="70" x2="431" y2="70" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#cpu-arr)"/>
-    <line x1="525" y1="70" x2="546" y2="70" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#cpu-arr)"/>
-    <path d="M592,95 L592,130 L255,130 L255,99" fill="none" stroke="var(--accent)" stroke-width="2" marker-end="url(#cpu-arr)"/>
-    <text x="360" y="124" fill="var(--accent)">write-back to register file</text>
-  </g>
-</svg>
-</div>
+The ALU is built from logic gates, shifters, comparators and multiplexers. All operations (`AND`, `CAND`, `OR`, `XOR`, `ADD`, `NADD`, `SLT`, `SLTU` and the shifts) are calculated in parallel, and a multiplexer controlled by the 4-bit `ALUOp` signal selects the result we need:
 
-### The control unit as a ROM
+<img src="/images/posts/pipelined-cpu/alu.png" alt="ALU circuit" style="margin-inline:auto;" />
 
-Instead of deriving a logic equation for every control signal, we fed the opcode through a **decoder into a ROM** whose words *are* the control signals. Adding an instruction becomes editing one ROM row rather than re-deriving boolean equations.
+<strong>Main control unit</strong>
+
+Instead of writing a logic equation for every control signal, we decoded the opcode and used a <strong>ROM</strong>, where every word is the set of control signals for one instruction. Adding or fixing an instruction means changing one row in the ROM instead of redesigning gates:
+
+<img src="/images/posts/pipelined-cpu/main-control-unit.png" alt="Main control unit with decoder and ROM" style="margin-inline:auto;" />
+
+These are the control signals it generates:
 
 | Signal | 0 | 1 | 2 | 3 |
 |---|---|---|---|---|
 | `RegDst` | Rt | Rd | R7 (for `JAL`) | R0 (for `SET`) |
 | `ExtOp` | zero-extend | sign-extend | – | – |
-| `ALUSrc` | BusB (Rt) | ext. imm5 | ext. imm11 | ext. imm11 |
+| `ALUSrc` | BusB (Rt) | extended imm5 | extended imm11 | extended imm11 |
 | `MemRd` / `MemWr` | off | on | – | – |
-| `WBdata` | ALU result | memory out | PC + 1 (return addr) | ext. imm11 |
+| `WBdata` | ALU result | memory output | PC + 1 (return address) | extended imm11 |
 
-The 4-way `RegDst` and `WBdata` muxes are what this ISA needs beyond textbook MIPS — `JAL` writes `PC+1` into `R7`, and `SET` writes an immediate straight into `R0`.
+Once all components are connected, we get the complete single-cycle processor shown at the top of this article: instruction fetch, instruction splitter, register file, ALU, data memory, next PC logic and the control unit.
 
-The ALU itself was one 16-input mux selected by a 4-bit `ALUOp`, with each operation (`AND`, `CAND`, `OR`, `XOR`, `ADD`, `NADD`, `SLT`, `SLTU`, shifts) computed in parallel and the mux picking the result.
-
-## Stage 2: pipelining it
-
-Split the datapath with four pipeline registers into five stages:
+&nbsp;
+<h3><strong>Pipelined design</strong></h3>
+In the pipelined version we split the datapath into five stages with pipeline registers between them: <strong>IF</strong> (instruction fetch), <strong>ID</strong> (instruction decode), <strong>EX</strong> (execute), <strong>MEM</strong> (memory access) and <strong>WB</strong> (write back). Now a new instruction can start every cycle:
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 230" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Pipeline timing diagram: four instructions overlap across IF, ID, EX, MEM, WB stages, one stage apart each clock cycle">
@@ -171,65 +162,96 @@ Split the datapath with four pipeline registers into five stages:
 </svg>
 </div>
 
-Throughput approaches one instruction per cycle. The price: **hazards**.
+As you can see above, every instruction after the first one needs `$1` before it has been written back. This is called a <strong>data hazard</strong>, and solving hazards is the real work in a pipelined design. Lets go through the stages one by one.
 
-## The three hazards, and how we solved each
+<strong>IF — Instruction Fetch</strong>
 
-### 1. Data hazards → a three-way forwarding unit
+The PC selects the next address from four options (`PC+1`, `JUMP`, `BRANCH`, `JUMPR`) using the `PCSrc` signal. Notice two important signals here: `Stall` disables writing the PC and the instruction register, and `Kill1` replaces the fetched instruction with `0000` (a no-op):
 
-Our hazard unit watches the destination registers of the **three** instructions ahead of the one in EX, and a 4-input mux in front of each ALU operand picks the freshest value:
+<img src="/images/posts/pipelined-cpu/pipeline-if-stage.png" alt="Instruction fetch stage" style="margin-inline:auto;" />
+
+<strong>ID — Instruction Decode</strong>
+
+Here the instruction is split into its fields, registers are read, and the control unit generates the signals. This is also where the <strong>forwarding multiplexers</strong> sit: `ForwardA` and `ForwardB` decide whether each ALU operand comes from the register file or from one of the three instructions ahead (`FW1`, `FW2`, `FW3`):
+
+<img src="/images/posts/pipelined-cpu/pipeline-id-stage.png" alt="Instruction decode stage with hazard unit" style="margin-inline:auto;" />
+
+<strong>EX, MEM and WB</strong>
+
+The ALU runs in EX, data memory is accessed in MEM, and the result is written back in WB. At the bottom you can see how control signals travel with the instruction through the pipeline registers. If `Kill2` or `Stall` is active, the multiplexer sends zeros instead, which turns the instruction into a bubble:
+
+<img src="/images/posts/pipelined-cpu/pipeline-ex-mem-wb.png" alt="Execute, memory and write back stages" style="margin-inline:auto;" />
+
+&nbsp;
+<h3><strong>Hazard detection unit</strong></h3>
+The hazard unit compares the source registers of the current instruction (`s`, `t`) with the destination registers of the three previous instructions (`d2`, `d3`, `d4`) and checks if those instructions really write a register (`RegWr`):
+
+<img src="/images/posts/pipelined-cpu/hazard-unit.png" alt="Hazard detection and forwarding unit" style="margin-inline:auto;" />
+
+The forwarding signals mean:
 
 | `ForwardA` / `ForwardB` | ALU operand comes from |
 |---|---|
 | 0 | Register file (no hazard) |
-| 1 | Previous instruction — result sitting in EX/MEM |
-| 2 | 2nd previous instruction — in MEM/WB |
-| 3 | 3rd previous instruction — the value being written back this cycle |
+| 1 | Previous instruction (EX stage) |
+| 2 | Second previous instruction (MEM stage) |
+| 3 | Third previous instruction (WB stage) |
 
-**Priority matters:** if two older instructions both write the same register, forward from the **most recent** one. Getting this order wrong passes simple tests and fails on loops.
+Look at the chain of three multiplexers on the right side of the circuit. The comparison for the <strong>most recent</strong> instruction (`EC1`) is connected last, so it always wins. This order is very important: if two older instructions write the same register, we must take the newest value. A wrong order passes simple tests and fails on loops.
 
-### 2. Load-use hazard → stall exactly one cycle
+<strong>The load-use stall</strong>
+
+Forwarding cannot solve this case:
 
 ```
-lw  $7, 0($2)      ; value only exists after MEM
-naddi $2, $7, 15   ; needs $7 in EX — one cycle too early
+lw    $7, 0($2)    ; the value exists only after MEM
+naddi $2, $7, 15   ; but it is needed in EX one cycle earlier
 ```
 
-Forwarding can't fix this: the data doesn't exist yet when the dependent instruction reaches EX. Our design stalls for exactly one cycle. The standard way to build that: detect "instruction in EX is a load AND its `rt` matches a source of the instruction in ID," then:
+That is why the bottom of the hazard unit generates:
 
-1. Freezes the PC and the IF/ID register (hold the same instructions one more cycle)
-2. Injects a bubble (all control signals zero) into ID/EX
-3. Next cycle, forwarding from MEM/WB delivers the loaded value
+```
+Stall = (EC1A OR EC1B) AND EX.MemRd
+```
 
-### 3. Control hazards → kill signals
+In words: if the previous instruction is a load (`MemRd`) and the current instruction needs its destination register, freeze the PC and the instruction register for one cycle and insert a bubble. In the next cycle the value is forwarded normally.
 
-By the time a branch resolves, the wrong-path instructions are already in the pipe. The PC control unit generates `PCSrc` (which next-PC to take) and two signals, **`kill1`** and **`kill2`**, that zero out the control bits of the wrong-path instructions in the pipeline registers — turning them into no-ops instead of letting them write registers or memory.
+&nbsp;
+<h3><strong>PC control unit and branches</strong></h3>
+The PC control unit decides the next PC and which wrong instructions must be cancelled. Branch conditions come from the ALU flags (`>0`, `=0`, `<0`), for example `BGEZ` is taken when `EQZ OR GTZ`:
 
-## How we tested it
+<img src="/images/posts/pipelined-cpu/pc-control-unit.png" alt="PC control unit with branch and kill logic" style="margin-inline:auto;" />
 
-Each test program targeted one failure mode, and each one is in the repo:
+There are two kill signals:
 
-| Program | Exercises |
+- **`Kill1`** cancels the instruction in IF. It is used for jumps (and branches), because one wrong instruction is already fetched.
+- **`Kill2`** cancels the instruction in ID as well. It is used for taken branches, because a branch is resolved later and two wrong instructions are already in the pipeline.
+
+&nbsp;
+<h3><strong>Testing</strong></h3>
+Each test program was written to test one specific part of the design:
+
+| Program | What it tests |
 |---|---|
-| Sequence of all instructions | Every opcode, single-cycle correctness |
-| Bubble sort | Loops, branches, `LW`/`SW`, real data dependency chains |
-| Count the 1-bits in a register | Shifts, branches, a tight loop |
-| Independent instructions | Pipeline fill/drain with no hazards |
-| Dependent instructions (> 5 in a chain) | Every forwarding path |
+| Sequence of all instructions | Every opcode in the single-cycle design |
+| Bubble sort | Loops, branches, `LW`/`SW` and real dependency chains |
+| Count the 1-bits in a register | Shifts, branches and a tight loop |
+| Independent instructions | Pipeline fill and drain without hazards |
+| Dependent instructions (more than 5 in a chain) | All forwarding paths |
 | Dependent instructions after `LW` | The load-use stall |
-| Branching logic | `kill1`/`kill2` flushing |
+| Branching logic | `Kill1` / `Kill2` flushing |
 
-The bubble sort, in our ISA:
+This is the bubble sort program in our instruction set:
 
 ```
           set 4                ; numOfComparisons = arraySize - 1
 whileLoop: beqz $0, EndWhile
           xor  $1, $1, $1      ; i = 0
-ForLoop:  nadd $5, $0, $1      ; $5 = $1 - $0  → zero when i == numOfComparisons
+ForLoop:  nadd $5, $0, $1      ; $5 = $1 - $0, zero when i == numOfComparisons
           beqz $5, EndForLoop
           addi $2, $1, 0
           lw   $3, 0($2)       ; array[i]
-          lw   $4, 1($2)       ; array[i+1]   (word-addressed: +1)
+          lw   $4, 1($2)       ; array[i+1]
           slt  $6, $4, $3
           beqz $6, Endif
           sw   $4, 0($2)       ; swap
@@ -241,19 +263,27 @@ EndForLoop: addi $0, $0, -1
 EndWhile: addi $7, $7, 1
 ```
 
-Notice `lw $3` immediately followed by `lw $4` then `slt` using both — that's a load-use stall *and* a two-deep forwarding case in four lines. Real programs find bugs synthetic tests miss.
+Before running the program, the array in data memory is in reverse order:
 
-## If you're building one: the order that works
+<img src="/images/posts/pipelined-cpu/bubble-sort-before.png" alt="Data memory before bubble sort" width="520" style="margin-inline:auto;" />
 
-1. **Register file** alone — test simultaneous read-two/write-one.
-2. **ALU** alone — test every op with edge values (0, -1, max int, overflow).
-3. **Control ROM** — write the truth table in a spreadsheet first, then burn it.
-4. **Single-cycle CPU** — run the all-instructions program, check every register after every step.
-5. **Insert the four pipeline registers** — with no hazard logic, run only independent instructions.
-6. **Add forwarding** — run the dependent-chain test.
-7. **Add the load-use stall** — run the `LW` test.
-8. **Add branch flushing** — run the branch test, then bubble sort as the final exam.
+After running it, the array is sorted:
 
-Each step adds one mechanism and one test. Skipping ahead means debugging three mechanisms at once.
+<img src="/images/posts/pipelined-cpu/bubble-sort-after.png" alt="Data memory after bubble sort" width="520" style="margin-inline:auto;" />
 
-Writing those test programs by hand in hex got old fast — which is why I wrote an [assembler and simulator](/Writing-an-Assembler-and-Simulator-in-Java/) for this ISA. That's the next post.
+> **_NOTE:_**  Notice the two `lw` instructions followed directly by `slt`, which uses both loaded values. In four lines this program tests the load-use stall and two levels of forwarding. Real programs find bugs that simple tests miss.
+
+&nbsp;
+<h3><strong>Summary</strong></h3>
+Building a processor teaches you things that are hard to learn from a textbook: why the control unit is easier as a ROM, why forwarding priority matters, and why some hazards can only be solved by stalling. If you want to build your own, follow this order and test after each step:
+
+1. Register file alone
+2. ALU alone, with edge values (0, -1, overflow)
+3. Control ROM (write the truth table in a spreadsheet first)
+4. Complete single-cycle CPU
+5. Add the pipeline registers and test only independent instructions
+6. Add forwarding and test dependent instructions
+7. Add the load-use stall
+8. Add branch flushing, then run bubble sort as the final test
+
+Writing all those test programs by hand in hex was painful, which is why I also wrote an [assembler and simulator](/Writing-an-Assembler-and-Simulator-in-Java/) for this instruction set. I will explain it in the next article. The full Logisim circuit, test programs and project report are available on <a href="https://github.com/YousefKJM/Pipelined-Processor-Design" target="_blank" rel="noopener">GitHub</a>.
