@@ -1,8 +1,8 @@
 ---
 title: "What Happens When a User Clicks Save: The Full-Stack Request Lifecycle"
 excerpt: "Browser, DNS, TLS, load balancer, web server, app, database — one click travels through all of them. Where each hop breaks, what it looks like, and the first tool to reach for."
+tags: [Web, full-stack, performance, architecture]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 470" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Request lifecycle in eight hops: browser event, DNS lookup, TCP and TLS handshake, CDN or load balancer, web server, application code, database, then response rendered back in the browser">
   <line x1="40" y1="30" x2="40" y2="440" stroke="var(--border)" stroke-width="2"/>

@@ -3,8 +3,8 @@ title: "Building a Deep Neural Network Speech Recognizer"
 excerpt: "Raw audio in, English text out — no pronunciation dictionary. Spectrograms, seven CNN/RNN architectures, CTC loss, and the training curves that showed why my \"final\" model lost to a simpler one."
 header:
   image: /images/posts/speech-recognizer/pipeline.png
+tags: [AI, deep-learning, RNN, CNN, speech]
 ---
-
 ![Speech recognition pipeline](/images/posts/speech-recognizer/pipeline.png)
 
 Speech recognition wasn't new to me: my team's project <em>Mon9et</em> used it to help users check their Quran recitation. But there we leaned on existing speech-to-text tools. This time I wanted to build the acoustic model myself — a deep network that takes raw audio and outputs English text, with no hand-made pronunciation dictionary in between.

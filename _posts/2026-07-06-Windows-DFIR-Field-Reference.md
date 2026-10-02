@@ -1,8 +1,8 @@
 ---
 title: "The Windows DFIR Field Reference: Timestamps, Execution Evidence, and Lateral Movement"
 excerpt: "A working cheat sheet for Windows incident response — how $STANDARD_INFORMATION and $FILENAME timestamps actually behave, where to find proof of execution, what a clean process tree looks like, and how the common lateral movement techniques show up on both ends of the wire. Built from the SANS FOR500/FOR508 posters, corrected and extended with what's changed through 2026."
+tags: [DFIR, forensics, Windows, timeline, lateral-movement]
 ---
-
 I keep coming back to two posters on my wall: SANS FOR500's timestamp/artifact poster and FOR508's "Hunt Evil" poster. Between them they cover most of what you need in the first two hours of a Windows intrusion case — but they're a few years old in places, and a poster can't hold a "here's the gotcha" the way a page can. This is that page: the same core reference, corrected where Windows has moved on, with the 2025–2026 artifacts (Recall, PCA, the ShimCache research) that didn't exist when those posters were printed.
 
 Both original posters are below — click either page to open the full, searchable PDF in a new tab. Everything after them is my own writeup.

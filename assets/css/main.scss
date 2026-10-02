@@ -296,6 +296,90 @@ a {
   padding-block: 40px;
 }
 
+// ---- Home filter: search + category chips + tag pills ----
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-block: 4px 0;
+  margin-top: 8px;
+}
+.filter__search { position: relative; display: flex; align-items: center; }
+.filter__icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.filter__input {
+  width: 100%;
+  padding: 12px 40px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  transition: border-color 0.15s ease;
+}
+.filter__input::placeholder { color: var(--text-faint); }
+.filter__input:focus { outline: none; border-color: var(--accent); }
+.filter__clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.filter__clear:hover { color: var(--accent); }
+.filter__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: inherit;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.chip:hover { color: var(--accent); border-color: var(--accent); }
+.chip.is-active {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.chip__n { font-family: var(--font-mono); font-size: 0.72rem; opacity: 0.7; }
+.chip.is-active .chip__n { opacity: 0.9; }
+.filter__count {
+  margin: 0;
+  min-height: 1em;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.post-card__tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.tag-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 2px 8px;
+}
+// The hidden attribute must win over .post-card{display:block}
+.post-card[hidden],
+.empty-state[hidden],
+.filter__clear[hidden] { display: none !important; }
+
 // =============================================================
 // Post page
 // =============================================================

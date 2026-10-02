@@ -3,8 +3,8 @@ title: "Building a Data Pipeline from Raw CSV to a Trusted Report"
 excerpt: "Ingest, validate, clean, model, query, test, schedule — a small Python and SQL pipeline run on a deliberately messy export, and the date bug that passed every check until one more test was added."
 header:
   image: /images/posts/data-pipeline/monthly_revenue.png
+tags: [Software, data, pandas, SQL, ETL]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 190" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Pipeline layers: sources land untouched in bronze raw storage, are validated and cleaned into silver, then modeled into gold aggregate tables that feed dashboards">
   <defs><marker id="de-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>

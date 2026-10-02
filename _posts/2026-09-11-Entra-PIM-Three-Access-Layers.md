@@ -3,8 +3,8 @@ title: "Global Admin Is Not Azure Owner: Designing Microsoft Entra PIM Across Th
 excerpt: "Global Administrator can't touch an Azure VM — until one toggle makes it owner of every subscription. Three access layers, the bridges between them, and a real PIM rollout with code, detections and DFIR questions."
 header:
   image: /images/posts/pim/hero.jpg
+tags: [Cloud, Detection, identity, PIM, Azure, M365]
 ---
-
 ![Global Admin is not Azure Owner: designing Microsoft Entra PIM across three access layers](/images/posts/pim/hero.jpg)
 
 A short LinkedIn post by <a href="https://www.linkedin.com/feed/update/urn:li:activity:7499820735549321216/" target="_blank" rel="noopener">Rishi .P</a> caught my attention this week with a point I wish more teams heard early: <strong>Global Administrator and Azure Owner are not the same thing</strong>. Before configuring PIM, ask <em>what exactly you're protecting</em> — Entra administration, Azure resources, or membership of a privileged group. The post promised a real-world PIM scenario next, and that's exactly where I see organizations stumble.

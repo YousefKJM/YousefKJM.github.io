@@ -3,8 +3,8 @@ title: "Agentic AI: From Chatbot to Coworker — A Hands-on Starter Guide"
 excerpt: "A chatbot answers. An agent gets it done. What's really inside an AI agent — the loop, tools, memory, MCP — and a working one in about 60 lines of Python, guardrails included."
 header:
   image: /images/posts/agentic-ai/hero.jpg
+tags: [AI, agents, MCP, LLM]
 ---
-
 ![Agentic AI: the goal, think, act, observe loop around an LLM](/images/posts/agentic-ai/hero.jpg)
 
 Most of my posts are about security. This one is a Friday break, on the topic everyone's talking about: <strong>agentic AI</strong>. A chatbot answers your question. An agent takes your <em>goal</em>, makes a plan, uses tools, checks the results and keeps going until the job is done. That's the gap between "here's how to rename your files" and "I renamed your files — here's what changed".

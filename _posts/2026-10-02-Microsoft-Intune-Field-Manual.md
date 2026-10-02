@@ -3,8 +3,8 @@ title: "Microsoft Intune Field Manual: Architecture, Build, SIEM Logging, DFIR a
 excerpt: "Intune can run code as SYSTEM on every laptop you own — and in 2026 attackers used exactly that to wipe a company's devices. Architecture, network, modules, SIEM logging, DFIR and a security review, all in one field manual."
 header:
   image: /images/posts/intune/hero.jpg
+tags: [Cloud, DFIR, Detection, Intune, SIEM, M365]
 ---
-
 ![Microsoft Intune field manual: architecture, build, network, SIEM logging, DFIR and security review](/images/posts/intune/hero.jpg)
 
 Intune is one of those platforms everyone in IT touches and few people see completely. The endpoint team sees profiles and apps, the identity team sees Conditional Access, and the SOC sees… usually nothing, until the day something goes wrong. In March 2026, attackers holding a single administrator account used Stryker's own Intune tenant to <strong>remote-wipe a very large number of corporate and personal devices</strong> — without deploying any malware at all. A management plane that can run code as SYSTEM on every laptop is also a weapon.

@@ -1,8 +1,8 @@
 ---
 title: "IaaS, PaaS, SaaS and Serverless: Choosing the Right Cloud Model"
 excerpt: "IaaS, PaaS, SaaS, serverless — the real difference is one question: how much of the stack do you still want to patch yourself? A decision map from my AZ-900 notes, with real Azure services for each model."
+tags: [Cloud, Azure, serverless, architecture, AZ-900]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 380" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Responsibility matrix: on-premises you manage all layers; IaaS provider manages up to virtualization; PaaS provider also manages OS and runtime; SaaS provider manages everything except data and access">
   <g style="font-size:12px;">

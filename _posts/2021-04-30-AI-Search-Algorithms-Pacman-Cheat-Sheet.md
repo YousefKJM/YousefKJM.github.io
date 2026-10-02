@@ -3,8 +3,8 @@ title: "AI Search Algorithms Explained with Pac-Man"
 excerpt: "DFS, BFS, UCS and A* are the same loop with a different frontier. A visual tour of classic AI search — plus heuristics, minimax and Q-learning — through the Pac-Man agents my team built."
 header:
   image: /images/posts/ai-search/search_comparison.png
+tags: [AI, search, algorithms, Python, game-AI]
 ---
-
 ![DFS, BFS, UCS and A* compared on the same maze](/images/posts/ai-search/search_comparison.png)
 
 Few university projects were as much fun as building agents for Pac-Man with a team of four. The agent had to navigate a maze, eat all the food efficiently and stay away from the ghosts. It sounds like a game; it is actually a full tour of classical AI — search, heuristics, adversarial reasoning and reinforcement learning.

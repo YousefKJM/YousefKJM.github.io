@@ -3,8 +3,8 @@ title: "Building a Pipelined RISC Processor in Logisim"
 excerpt: "We built a 32-bit CPU gate by gate — single-cycle first, then a five-stage pipeline with forwarding, stalls and branch flushing. Here are the real Logisim circuits and the lessons each one taught us."
 header:
   image: /images/posts/pipelined-cpu/single-cycle-datapath.png
+tags: [Software, hardware, CPU, Logisim, computer-architecture]
 ---
-
 ![Single cycle processor in Logisim](/images/posts/pipelined-cpu/single-cycle-datapath.png)
 
 Every software engineer uses a processor all day; very few of us ever build one. In ICS 233 (Computer Architecture &amp; Assembly Language) at KFUPM, my team of three did exactly that. We designed a <strong>32-bit RISC processor</strong> gate by gate in <a href="http://www.cburch.com/logisim/" target="_blank" rel="noopener">Logisim</a>, first as a single-cycle CPU and then as a <strong>five-stage pipeline</strong>. My part of the pipelined version was the next-PC logic, the main control unit and most of the integration work.

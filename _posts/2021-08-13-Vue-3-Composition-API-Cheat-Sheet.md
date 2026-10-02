@@ -3,8 +3,8 @@ title: "Getting Started with the Vue 3 Composition API"
 excerpt: "A live-filtered project list in under 50 lines — the Vue 3 Composition API and <script setup>, built piece by piece, with each part mapped back to the Options API you already know."
 header:
   image: /images/posts/vue-3/project-list.png
+tags: [Web, Vue, JavaScript, frontend]
 ---
-
 <p align="center">
 <img src="/images/posts/vue-3/project-list.png" alt="A small Vue 3 app listing projects" width="640" style="margin-inline:auto;"/>
 </p>

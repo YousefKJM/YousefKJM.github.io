@@ -3,8 +3,8 @@ title: "When the Case Freezes You: A Field Kit for DFIR Paralysis"
 excerpt: "A 4 TB image with no context. A lawyer asking about a report you wrote two years ago. Three hours deep in one artifact. Every responder freezes eventually — here's a structured way back to moving, built on Brett Shavers' idea that context is the story."
 header:
   image: /images/posts/dfir-paralysis/hero.jpg
+tags: [DFIR, mindset, methodology, SOC]
 ---
-
 ![When the case freezes you: a field kit for getting unstuck](/images/posts/dfir-paralysis/hero.jpg)
 
 Picture it. A drive lands on your desk — four terabytes, a one-line ticket ("possible data theft, please check"), and a manager who wants an answer by Thursday. You mount the image, open your favourite tool, and… nothing. Not a technical problem. A human one. There are a million places to start and none of them looks like the right one.

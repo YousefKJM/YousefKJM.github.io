@@ -1,8 +1,8 @@
 ---
 title: "React Native vs Flutter vs Ionic: How to Choose a Mobile Framework"
 excerpt: "Forget the language debate. Ionic, React Native and Flutter differ in how they put a button on the screen — and once you see that, the choice gets easy. Notes from shipping both Ionic and native apps."
+tags: [Web, mobile, React-Native, Flutter, Ionic]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 300" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Ionic renders HTML in a WebView; React Native runs JavaScript that drives real native widgets through a bridge; Flutter draws every pixel itself with its own rendering engine">
   <g style="font-size:12px;">

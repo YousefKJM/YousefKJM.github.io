@@ -1,8 +1,8 @@
 ---
 title: "Part-of-Speech Tagging with a Hidden Markov Model and Viterbi"
 excerpt: "Is \"count\" a noun or a verb? A Hidden Markov Model trained by counting and decoded with Viterbi — tested on the Brown corpus, including the smoothing mistake that made it lose to a one-line baseline."
+tags: [AI, NLP, HMM, Viterbi, Python]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 190" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Hidden Markov Model: hidden tag states DET, NOUN, VERB connected left to right by transition probabilities; each emits an observed word below it through an emission probability">
   <defs><marker id="hm-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>

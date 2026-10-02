@@ -1,8 +1,8 @@
 ---
 title: "Software Engineering Practices That Survive a Real Team"
 excerpt: "Six people, one repository, one semester. The handful of engineering habits that kept our senior project shippable — from requirements you can test to a definition of done nobody can argue with."
+tags: [Software, engineering, testing, Git, architecture]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 170" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Layered architecture: presentation layer calls service layer, which calls data access layer, which talks to the database; dependencies only point downward">
   <defs><marker id="se-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>

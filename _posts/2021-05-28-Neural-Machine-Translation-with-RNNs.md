@@ -3,8 +3,8 @@ title: "Neural Machine Translation with RNNs in Keras"
 excerpt: "Five RNN architectures, one English-to-French dataset, real validation numbers. The surprise: the simplest upgrade — an embedding layer — beat the fancy encoder-decoder."
 header:
   image: /images/posts/machine-translation/rnn.png
+tags: [AI, NLP, RNN, Keras, deep-learning]
 ---
-
 ![Recurrent neural network for translation](/images/posts/machine-translation/rnn.png)
 
 [Tagging words](/HMM-Part-of-Speech-Tagging-with-Viterbi/) with counts was one thing. Translation is a much harder sequence problem: read a whole sentence in one language, write it in another, where word order changes and the lengths don't match.

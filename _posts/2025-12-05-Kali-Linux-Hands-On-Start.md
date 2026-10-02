@@ -3,8 +3,8 @@ title: "Kali Linux: A Hands-On Start for Authorized Security Testing"
 excerpt: "Kali bundles hundreds of offensive-security tools into one Debian-based distro — which makes it powerful and, used carelessly, a fast way to get yourself in trouble. Here's how to install it, build a safe practice lab, and work through its toolkit the right way: with scope, method and a report."
 header:
   image: /images/posts/kali/hero.jpg
+tags: [Offensive, pentest, Kali, tools, red-team]
 ---
-
 ![Kali Linux: a hands-on start for authorized security testing](/images/posts/kali/hero.jpg)
 
 Kali Linux is the Swiss Army knife of offensive security: a free, Debian-based distribution with several hundred penetration-testing, forensics and security-auditing tools pre-installed and maintained by Offensive Security. If you've watched anyone do security testing in a film, they were almost certainly staring at Kali.

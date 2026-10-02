@@ -1,8 +1,8 @@
 ---
 title: "Building a Secure Website, Layer by Layer: A DFIR Specialist's Checklist"
 excerpt: "Most 'secure your website' guides stop at HTTPS and a login form. This is the checklist I'd actually use — DNS to database, headers to CI/CD — written from the other side of the fence: I'm usually the one investigating what happens when one of these layers gets skipped."
+tags: [Detection, security, web, hardening, TLS]
 ---
-
 Most of my working hours go into figuring out what happened *after* something already broke. That gives you an opinion on prevention that's different from a typical AppSec checklist: I don't just want a website to resist an attacker, I want it to leave a trail if one gets through anyway. Prevention fails eventually. The question is whether you find out in an hour or in six months.
 
 This is the full-stack version — DNS on one end, incident-ready logging on the other. Treat each section as a layer of the same onion. Skipping one doesn't sink the site; it just means the next layer has to catch everything alone.

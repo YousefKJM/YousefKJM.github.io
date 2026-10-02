@@ -3,8 +3,8 @@ title: "Containers and Azure Kubernetes Service"
 excerpt: "In this article I would like to describe some concepts around containerized ASP .NET Core applications, Docker, Azure Container Registry and Azure Kubernetes Service."
 header:
   image: /images/posts/article3/aksintro01.png
+tags: [Cloud, Azure, Kubernetes, containers, DevOps]
 ---
-
 <p align="center">
 <img src="/images/posts/article3/aksintro01.png?raw=true" alt="Container and Azure Kubernetes Service"/>
 </p>

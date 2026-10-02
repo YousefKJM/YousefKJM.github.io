@@ -3,8 +3,8 @@ title: "Building a REST API with Django REST Framework in 10 Steps"
 excerpt: "From an empty folder to an authenticated, searchable, tested REST API — ten steps with Django REST Framework, and a browsable API you can click through at the end."
 header:
   image: /images/posts/django-rest-api/project-list.png
+tags: [Web, Django, Python, API, backend]
 ---
-
 ![Django REST Framework browsable API](/images/posts/django-rest-api/project-list.png)
 
 Django sits behind several of my projects, including Mon9et, the Quran recitation checker my team built. The moment a Vue frontend or a mobile app needs data, Django turns into an API server — and <strong>Django REST Framework (DRF)</strong> makes that surprisingly painless.

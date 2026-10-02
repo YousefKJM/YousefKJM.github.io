@@ -3,8 +3,8 @@ title: "Hosting a Web App on Azure App Service Using the Azure CLI"
 excerpt: "Portal clicks don't scale. The same App Service setup — plan, config, deployment, security and zero-downtime slots — as a handful of Azure CLI commands you can save and rerun in minutes."
 header:
   image: /images/posts/article2/adevops26.png
+tags: [Cloud, Azure, App-Service, CLI, hosting]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 230" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Azure App Service hierarchy: subscription contains resource group, which contains an App Service plan, which hosts one or more web apps with deployment slots">
   <g style="font-size:13px;">

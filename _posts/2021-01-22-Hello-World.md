@@ -3,8 +3,8 @@ title: Hello World!
 excerpt: "HELLO & WELCOME TO MY FIRST BLOG POST"
 header:
   image: /images/posts/article1/initial.png
+tags: [Meta, intro]
 ---
-
 ![My first article]({{ site.baseurl }}/images/posts/article1/initial.png)
 
 Welcome to the launch of the new YMTech blog website and my first blog post! My name is Yousef Majeed and this is my personal blog or better my personal knowledge base where I am writing down my thoughts all around technology.

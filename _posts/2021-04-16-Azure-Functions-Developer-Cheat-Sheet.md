@@ -1,8 +1,8 @@
 ---
 title: "Getting Started with Azure Functions: Triggers, Bindings and Deployment"
 excerpt: "Not every job needs a web app. Resize an image, drain a queue, run a nightly cleanup — Azure Functions with triggers and bindings, from local project to deployed function."
+tags: [Cloud, Azure, serverless, Functions]
 ---
-
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 200" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Azure Function anatomy: one trigger feeds the function, input bindings supply data, output bindings write results">
   <defs><marker id="af-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>

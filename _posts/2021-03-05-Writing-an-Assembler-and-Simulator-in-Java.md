@@ -3,8 +3,8 @@ title: "Writing an Assembler and Simulator for Our Custom CPU in Java"
 excerpt: "Hand-assembling hex for a homemade CPU gets old fast. So I wrote a two-pass assembler and a simulator in Java — here's how labels get resolved, how instructions become bits, and how the same code doubles as a reference CPU."
 header:
   image: /images/posts/assembler-simulator/simulator-result.png
+tags: [Software, Java, assembler, compilers, CPU]
 ---
-
 <p align="center">
 <img src="/images/posts/assembler-simulator/assembler-input.png" alt="ICS233 Project Assembler" width="532" style="margin-inline:auto;"/>
 </p>
