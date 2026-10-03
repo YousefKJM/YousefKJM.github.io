@@ -5,6 +5,7 @@
 {% capture card_tags %}{{ post.tags | join: ' ' | downcase }}{% endcapture %}
 <a class="post-card" href="{{ post.url | relative_url }}"
    data-tags="{{ card_tags | strip }}"
+   data-year="{{ post.date | date: '%Y' }}"
    data-text="{{ post.title | append: ' ' | append: card_excerpt | append: ' ' | append: card_tags | downcase | strip_html | escape }}">
   <div class="post-card__meta">
     <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>

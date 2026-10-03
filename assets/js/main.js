@@ -22,7 +22,8 @@
   var clear   = document.getElementById('filter-clear');
   var count   = document.getElementById('filter-count');
   var empty   = document.getElementById('filter-empty');
-  var cat = 'all', q = '';
+  var yearSel = document.getElementById('filter-year');
+  var cat = 'all', q = '', yr = 'all';
 
   function tokens(card) {
     return (card.getAttribute('data-tags') || '').split(/\s+/);
@@ -31,15 +32,16 @@
   function apply() {
     var shown = 0;
     cards.forEach(function (card) {
-      var matchCat = cat === 'all' || tokens(card).indexOf(cat) !== -1;
-      var matchQ   = q === '' || (card.getAttribute('data-text') || '').indexOf(q) !== -1;
-      var show = matchCat && matchQ;
+      var matchCat  = cat === 'all' || tokens(card).indexOf(cat) !== -1;
+      var matchQ    = q === '' || (card.getAttribute('data-text') || '').indexOf(q) !== -1;
+      var matchYear = yr === 'all' || card.getAttribute('data-year') === yr;
+      var show = matchCat && matchQ && matchYear;
       card.hidden = !show;
       if (show) shown++;
     });
     if (empty) empty.hidden = shown !== 0;
     if (count) {
-      count.textContent = (cat === 'all' && q === '')
+      count.textContent = (cat === 'all' && q === '' && yr === 'all')
         ? cards.length + ' posts'
         : 'Showing ' + shown + ' of ' + cards.length;
     }
@@ -51,6 +53,7 @@
     var p = new URLSearchParams();
     if (cat !== 'all') p.set('cat', cat);
     if (q !== '') p.set('q', q);
+    if (yr !== 'all') p.set('year', yr);
     var qs = p.toString();
     history.replaceState(null, '', qs ? '?' + qs : location.pathname);
   }
@@ -81,12 +84,22 @@
       input.value = ''; q = ''; apply(); input.focus();
     });
   }
+  if (yearSel) {
+    yearSel.addEventListener('change', function () {
+      yr = yearSel.value || 'all';
+      apply();
+    });
+  }
 
   // Restore state from the URL (so a filtered view is shareable / survives reload)
   var params = new URLSearchParams(location.search);
   var urlCat = params.get('cat');
   var urlQ = params.get('q');
+  var urlYear = params.get('year');
   if (urlQ) { q = urlQ.toLowerCase(); if (input) input.value = urlQ; }
+  if (urlYear && yearSel && Array.prototype.some.call(yearSel.options, function (o) { return o.value === urlYear; })) {
+    yr = urlYear; yearSel.value = urlYear;
+  }
   if (urlCat && chips.some(function (c) { return c.getAttribute('data-cat') === urlCat; })) {
     setCat(urlCat);
   } else {

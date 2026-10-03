@@ -18,10 +18,22 @@ layout: default
 {% assign cats   = "DFIR,Incident-Response,Malware-Analysis,Detection,Offensive,Cloud,AI,Software,Web" | split: "," %}
 {% assign labels = "DFIR & Forensics,Incident Response,Malware Analysis,Detection & SOC,Offensive,Cloud & Identity,AI & ML,Software,Web & Mobile" | split: "," %}
 <section class="wrap filter" id="post-filter" data-nojs-hidden>
-  <div class="filter__search">
-    <svg class="filter__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-    <input id="filter-q" class="filter__input" type="search" placeholder="Search posts &mdash; try &lsquo;memory&rsquo;, &lsquo;Azure&rsquo;, &lsquo;phishing&rsquo;&hellip;" autocomplete="off" aria-label="Search posts by keyword">
-    <button type="button" class="filter__clear" id="filter-clear" aria-label="Clear search" hidden>&times;</button>
+  {% capture all_years %}{% for post in site.posts %}{{ post.date | date: "%Y" }} {% endfor %}{% endcapture %}
+  {% assign years = all_years | split: " " | uniq | sort | reverse %}
+  <div class="filter__row">
+    <div class="filter__search">
+      <svg class="filter__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input id="filter-q" class="filter__input" type="search" placeholder="Search posts &mdash; try &lsquo;memory&rsquo;, &lsquo;Azure&rsquo;, &lsquo;phishing&rsquo;&hellip;" autocomplete="off" aria-label="Search posts by keyword">
+      <button type="button" class="filter__clear" id="filter-clear" aria-label="Clear search" hidden>&times;</button>
+    </div>
+    <div class="filter__date">
+      <svg class="filter__date-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+      <label class="sr-only" for="filter-year">Filter posts by year</label>
+      <select id="filter-year" class="filter__select" aria-label="Filter posts by year">
+        <option value="all">All years</option>
+        {% for yr in years %}<option value="{{ yr }}">{{ yr }}</option>{% endfor %}
+      </select>
+    </div>
   </div>
   <div class="filter__chips" role="group" aria-label="Filter by category">
     <button type="button" class="chip is-active" data-cat="all">All <span class="chip__n">{{ site.posts.size }}</span></button>

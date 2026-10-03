@@ -1,6 +1,6 @@
 ---
-title: "Agentic AI, Part 2: Build It Locally for Free — and Five Projects to Try"
-excerpt: "No API key, no cloud, no cost — run the same agent entirely on your laptop with Ollama. Then five projects to build, from a Downloads organizer to a malware-triage agent that writes its own report."
+title: "Agentic AI, Part 2: Build It Locally for Free — and Nine Projects to Try"
+excerpt: "No API key, no cloud, no cost — run the same agent entirely on your laptop with Ollama. Then nine projects to build, from a Downloads organizer to a malware-triage agent that writes its own report."
 header:
   image: /images/posts/agentic-ai/agent-run.png
 tags: [AI, agents, LLM, Ollama]
@@ -9,7 +9,7 @@ tags: [AI, agents, LLM, Ollama]
 
 In [part 1](/Agentic-AI-Getting-Started/) we opened the box: an agent is just a loop around a language model that can call tools, and we built a working one — with guardrails — against Claude's API. Two questions came back more than any other. *Can I run this without paying for an API?* And *what should I actually build?*
 
-This part answers both. First, you'll run the exact same agent **entirely on your own laptop — zero cost, fully private, no internet required** — using Ollama and an open-weight model. Then five projects to build, ordered from a 40-line warm-up to a proper capstone: a malware-triage agent that runs static and dynamic analysis and writes its own technical report.
+This part answers both. First, you'll run the exact same agent **entirely on your own laptop — zero cost, fully private, no internet required** — using Ollama and an open-weight model. Then nine projects to build, ordered from a 40-line warm-up to a proper capstone: a malware-triage agent that runs static and dynamic analysis and writes its own technical report.
 
 The thread running through all of it: the loop never changes. Swap the cloud client for a local one, swap one set of tools for another — the agent skill you learned in part 1 is the same skill here.
 
@@ -144,12 +144,12 @@ pip install ollama && python tidy_local.py       # no API key, nothing leaves yo
 
 > **Privacy win:** because the model runs on your box, the files, emails and logs your agent reads never touch a third party. That is exactly why local models are worth knowing for sensitive work — the phishing-triage and malware ideas below are built on it.
 
-## Five agents worth building
+## Nine agents worth building
 
-Reading about agents only gets you so far. Here are five worth building — the first four are an evening each, the last is a proper capstone. All of them are the same loop with different tools; each one below lists the tools you give it and the steps to get there.
+Reading about agents only gets you so far. Here are nine worth building — most are an evening each, the last is a proper capstone. They track the work I actually do: file chores, phishing and log triage, knowledge retrieval, SOC alert explanation, detection engineering, incident reporting, cloud posture and malware analysis. Every one is the same loop with different tools; each lists the tools you give it and the steps to get there.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
-<svg viewBox="0 0 640 325" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Five agent projects: a Downloads tidy-up agent you have already built; a private phishing-triage agent that reads .eml files and extracts indicators; an overnight log summarizer that greps and counts a log file; a notes assistant that answers from your own Markdown notes; and a capstone malware-triage agent that runs static and dynamic analysis and writes a full technical report with snippets and screenshots.">
+<svg viewBox="0 0 640 480" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Nine agent projects in a grid: 1, a Downloads tidy-up agent you already built; 2, a private phishing-triage agent that reads .eml files and extracts indicators; 3, an overnight log summarizer; 4, a notes assistant that answers from your own Markdown notes; 5, a SOC alert explainer that turns a raw alert into plain English with its ATT&CK technique; 6, a detection-rule writer that drafts and validates Sigma and KQL; 7, an incident-report writer that turns rough notes into an exec-ready report; 8, a cloud-posture reviewer that scans infrastructure-as-code for misconfigurations; and 9, the capstone malware-triage agent that runs static and dynamic analysis and writes a full technical report with snippets and screenshots.">
   <g style="font-size:12px;">
     <rect x="5" y="15" width="205" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
     <text x="22" y="40" font-size="22">🗂️</text>
@@ -172,19 +172,49 @@ Reading about agents only gets you so far. Here are five worth building — the 
     <text x="448" y="108" fill="var(--text-muted)">summarizes the</text>
     <text x="448" y="126" fill="var(--text-muted)">anomalies for you</text>
     <text x="448" y="148" fill="var(--text)">tools: grep · count</text>
-    <rect x="5" y="170" width="311" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
+    <rect x="5" y="170" width="205" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
     <text x="22" y="195" font-size="22">📚</text>
     <text x="22" y="221" font-weight="700" fill="var(--text)">4 · Notes assistant</text>
-    <text x="22" y="245" fill="var(--text-muted)">answers questions from your own</text>
-    <text x="22" y="263" fill="var(--text-muted)">Markdown notes, with citations</text>
-    <text x="22" y="301" fill="var(--text)">tools: search · read</text>
-    <rect x="324" y="170" width="311" height="140" rx="12" fill="var(--accent)" fill-opacity="0.10" stroke="var(--accent-strong)"/>
-    <text x="341" y="195" font-size="22">🔬</text>
-    <text x="482" y="193" text-anchor="end" font-size="11" font-weight="700" fill="var(--accent-strong)">★ CAPSTONE</text>
-    <text x="341" y="221" font-weight="700" fill="var(--text)">5 · Malware report</text>
-    <text x="341" y="245" fill="var(--text-muted)">static + dynamic triage, then a</text>
-    <text x="341" y="263" fill="var(--text-muted)">full report with snippets &amp; shots</text>
-    <text x="341" y="301" fill="var(--text)">tools: static · detonate · report</text>
+    <text x="22" y="245" fill="var(--text-muted)">answers from your</text>
+    <text x="22" y="263" fill="var(--text-muted)">own notes, cited —</text>
+    <text x="22" y="281" fill="var(--text-muted)">says when unsure</text>
+    <text x="22" y="303" fill="var(--text)">tools: search · read</text>
+    <rect x="218" y="170" width="205" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
+    <text x="235" y="195" font-size="22">🚨</text>
+    <text x="235" y="221" font-weight="700" fill="var(--text)">5 · Alert explainer</text>
+    <text x="235" y="245" fill="var(--text-muted)">SIEM/EDR alert →</text>
+    <text x="235" y="263" fill="var(--text-muted)">plain English, ATT&amp;CK</text>
+    <text x="235" y="281" fill="var(--text-muted)">+ what to do next</text>
+    <text x="235" y="303" fill="var(--text)">tools: parse · enrich</text>
+    <rect x="431" y="170" width="204" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
+    <text x="448" y="195" font-size="22">🎯</text>
+    <text x="448" y="221" font-weight="700" fill="var(--text)">6 · Detection writer</text>
+    <text x="448" y="245" fill="var(--text-muted)">a behaviour → Sigma</text>
+    <text x="448" y="263" fill="var(--text-muted)">+ KQL, syntax-checked</text>
+    <text x="448" y="281" fill="var(--text-muted)">and explained</text>
+    <text x="448" y="303" fill="var(--text)">tools: draft · validate</text>
+    <rect x="5" y="325" width="205" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
+    <text x="22" y="350" font-size="22">📝</text>
+    <text x="22" y="376" font-weight="700" fill="var(--text)">7 · IR report writer</text>
+    <text x="22" y="400" fill="var(--text-muted)">rough notes → an</text>
+    <text x="22" y="418" fill="var(--text-muted)">exec-ready incident</text>
+    <text x="22" y="436" fill="var(--text-muted)">write-up</text>
+    <text x="22" y="458" fill="var(--text)">tools: outline · draft</text>
+    <rect x="218" y="325" width="205" height="140" rx="12" fill="var(--bg-elevated-2)" stroke="var(--border)"/>
+    <text x="235" y="350" font-size="22">☁️</text>
+    <text x="235" y="376" font-weight="700" fill="var(--text)">8 · Cloud posture</text>
+    <text x="235" y="400" fill="var(--text-muted)">scans IaC for mis-</text>
+    <text x="235" y="418" fill="var(--text-muted)">configs, ranks the</text>
+    <text x="235" y="436" fill="var(--text-muted)">fixes by real risk</text>
+    <text x="235" y="458" fill="var(--text)">tools: scan · explain</text>
+    <rect x="431" y="325" width="204" height="140" rx="12" fill="var(--accent)" fill-opacity="0.10" stroke="var(--accent-strong)"/>
+    <text x="448" y="350" font-size="22">🔬</text>
+    <text x="625" y="348" text-anchor="end" font-size="11" font-weight="700" fill="var(--accent-strong)">★ CAPSTONE</text>
+    <text x="448" y="376" font-weight="700" fill="var(--text)">9 · Malware report</text>
+    <text x="448" y="400" fill="var(--text-muted)">static + dynamic →</text>
+    <text x="448" y="418" fill="var(--text-muted)">full technical report</text>
+    <text x="448" y="436" fill="var(--text-muted)">with snippets &amp; shots</text>
+    <text x="448" y="458" fill="var(--text)">static · detonate · report</text>
   </g>
 </svg>
 </div>
@@ -228,7 +258,47 @@ Ask questions and get answers grounded in *your* Markdown notes, with the source
 4. **Ask away.** The agent searches, reads the best matches, and answers with citations.
 5. **Level up later:** swap keyword search for *semantic* search by generating embeddings locally (`ollama pull nomic-embed-text`) and matching on meaning instead of exact words — the "lite" version of RAG from the memory section.
 
-### Idea 5 — The capstone: a malware-triage agent that writes the report
+### Idea 5 — A SOC alert explainer
+
+An EDR or SIEM fires a cryptic alert at 2 a.m. This agent turns the raw JSON into a plain-English explanation: what triggered it, how serious it is, which ATT&CK technique it maps to, and what to check first. The fastest way to make tier-1 triage less lonely.
+
+1. **Feed it one alert.** The raw alert JSON from whatever you run — Defender, Sentinel, CrowdStrike.
+2. **Give it two tools:** `parse_alert(json)` (pull out the fields that matter — process, parent, user, host, command line) and `lookup_technique(id)` (map a signal to its MITRE ATT&CK technique from a local copy of the ATT&CK data).
+3. **Brief it:** *"Explain this alert to a tier-1 analyst in five lines: what happened, severity, the ATT&CK technique, whether it reads like a true positive, and the first three things to check."*
+4. **Loop.** It parses the alert, maps the technique, and writes the brief.
+5. **Keep it advisory.** It triages and explains — it does not isolate hosts or close tickets. That stays the analyst's call. It pairs naturally with the hunting mindset in my [Unified Sentinel & Defender XDR](/Unified-Sentinel-Defender-XDR/) and [Windows DFIR](/Windows-DFIR-Field-Reference/) posts.
+
+### Idea 6 — A detection-rule writer
+
+Describe a behaviour — *"PowerShell spawned by Word, pulling from a raw GitHub URL"* — and get back a draft Sigma rule and the equivalent KQL, syntax-checked, with the logic explained. Your specialty, with the boilerplate removed.
+
+1. **Describe the behaviour** in a sentence, or hand it a sample log line.
+2. **Give it tools:** `write_sigma(spec)` / `write_kql(spec)` to draft, and `validate(rule)` to run the draft through a Sigma/KQL linter so you never ship broken syntax.
+3. **Brief it:** *"Draft a Sigma rule and the equivalent KQL for this behaviour. Explain each condition, call out likely false positives, and suggest a test that proves it fires."*
+4. **Loop.** It drafts, validates, explains — you refine by sharpening the description.
+5. **Test before you trust.** A generated rule is a starting point: fire it against known-good and known-bad data before it goes near production — exactly the validation loop from my [Atomic Red Team](/Atomic-Red-Team-Detection-Validation/) post. The agent drafts; you prove it.
+
+### Idea 7 — An incident-report writer
+
+Turn your rough IR notes — the messy timeline, the IOCs, the half-sentences — into a clean, exec-ready report with the sections leadership actually expects. This is the one that buys back your evening after a long case.
+
+1. **Dump your notes.** A scrappy Markdown file of what happened, when, and what you found.
+2. **Give it:** `read_notes()` and `write_report(sections)` (render to Markdown/PDF with your house template).
+3. **Brief it with the structure:** *"Produce an incident report with: Executive summary (non-technical), Timeline, Impact, Root cause, Containment & eradication, Lessons learned. Keep the summary leadership-ready and the detail faithful to my notes — never invent facts."*
+4. **Loop.** It orders the timeline, drafts each section, and flags anything your notes don't cover rather than filling the gap with a guess.
+5. **You own the facts.** It's a phrasing-and-formatting accelerant, not the author of record — read every line, because a report with your name on it is yours. That "never invent facts" rule is what keeps it honest, and it turns the blank-page problem from my [DFIR field kit](/DFIR-Paralysis-Field-Kit/) into an editing problem.
+
+### Idea 8 — A cloud-posture reviewer
+
+Point it at your infrastructure-as-code — Terraform, Bicep, an ARM template — and get back a ranked list of misconfigurations, each with the fix, *before* it ships.
+
+1. **Point it at a folder** of IaC or exported config.
+2. **Give it:** `list_resources()`, `read_resource(name)`, and `check_resource(name)` — your own checks, or wrap a free scanner like Checkov or tfsec and let the agent reason over its output.
+3. **Brief it:** *"Review these resources for security misconfigurations — public exposure, weak identity, missing encryption, over-broad roles. Rank findings by real-world risk and give the exact fix for each."*
+4. **Loop.** It reads each resource, runs the checks, and writes a prioritised report.
+5. **Advisory, not auto-apply.** It proposes; a human applies the fix through the normal pipeline. The same read-and-recommend discipline, pointed at the hardening work in my [Microsoft 365 hardening checklist](/Microsoft-365-Security-Hardening-Checklist/).
+
+### Idea 9 — The capstone: a malware-triage agent that writes the report
 
 This is the ambitious one, and it's squarely in our lane. Point it at a sample inside your isolated lab; it runs the standard static-then-dynamic triage, collects the output, and writes a full technical report — snippets, screenshots and IOCs — in the shape TCM Security's [Practical Malware Analysis & Triage](https://tcm-sec.com/) course teaches (the same structure I walk through in my [PMAT field guide](/Practical-Malware-Analysis-and-Triage-Field-Guide/)). It won't replace an analyst. It *will* do the grind — hashing, strings, IOC collection, formatting — so you spend your time on judgement.
 
@@ -274,10 +344,10 @@ This is the ambitious one, and it's squarely in our lane. Point it at a sample i
 
 > **One hard guardrail:** this agent *orchestrates* analysis tools inside a sandbox — it does not "use AI to fight malware," and the model never executes the sample itself. Detonation stays human-approved and lab-bound. Keep the local model for this if the sample is sensitive: nothing about the case leaves your network. (A bigger model reasons better over disassembly — a fair trade-off to make per sample.)
 
-> **The pattern underneath:** all five are the identical loop — goal, tools, observe, repeat — with sharp tools, one clear system prompt, and a human gate on anything that acts. Build the first and you've effectively built them all; the agent skill is reusable, and the tools are the only thing that changes from a Downloads sorter to a malware-triage analyst.
+> **The pattern underneath:** all nine are the identical loop — goal, tools, observe, repeat — with sharp tools, one clear system prompt, and a human gate on anything that acts. Build the first and you've effectively built them all; the agent skill is reusable, and the tools are the only thing that changes from a Downloads sorter to a malware-triage analyst.
 
 ## Where this leaves you
 
-Two posts in, you've seen the whole arc: an agent is a loop around a model that can call tools, it runs just as well on a free local model as on a frontier API, and the difference between a demo and something you'd trust is the tools you expose and the gates you put in front of them. Pick one of the five, build it this week, and read the traces — that's how the idea stops being abstract.
+Two posts in, you've seen the whole arc: an agent is a loop around a model that can call tools, it runs just as well on a free local model as on a frontier API, and the difference between a demo and something you'd trust is the tools you expose and the gates you put in front of them. Pick one, build it this week, and read the traces — that's how the idea stops being abstract.
 
 Worth reading next: go back to [part 1](/Agentic-AI-Getting-Started/) for the loop, tools, memory and MCP; Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>; and the <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> docs for the local models and tool-calling API used here.

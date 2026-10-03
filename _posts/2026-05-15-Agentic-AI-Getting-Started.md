@@ -516,6 +516,6 @@ Some ideas for that first real chore: sorting your receipts into a spreadsheet, 
 
 An agent is a loop: the model reads the goal and the history, asks for a tool, your code runs it and returns the result, and the cycle repeats until the job is done. Everything else is about making that loop useful and safe — clear tools, memory that fits the task, MCP to plug in new capabilities, the simplest pattern that works, and guardrails enforced in code rather than in the prompt. Start small, read the traces, and widen the agent's freedom only as it earns your trust.
 
-> **Next up:** [Part 2 — build it locally for free](/Agentic-AI-Run-It-Locally/) runs this same agent on your laptop at zero cost, then walks through five projects to build — from a Downloads organizer to a malware-triage agent that writes its own report.
+> **Next up:** [Part 2 — build it locally for free](/Agentic-AI-Run-It-Locally/) runs this same agent on your laptop at zero cost, then walks through nine projects to build — from a Downloads organizer to a malware-triage agent that writes its own report.
 
 Worth reading next: Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>, the <a href="https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview" target="_blank" rel="noopener">tool use documentation</a>, and the <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a> site.
