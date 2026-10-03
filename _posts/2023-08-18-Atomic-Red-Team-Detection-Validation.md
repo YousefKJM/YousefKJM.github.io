@@ -3,7 +3,7 @@ title: "Atomic Red Team: Prove Your Detections Actually Fire"
 excerpt: "You bought the EDR, you wrote the rules, you drew the dashboard. But would any of it actually catch an attacker? Atomic Red Team lets you safely run real ATT&CK techniques against your own lab and watch whether your detections light up — here's how to use it the right way."
 header:
   image: /images/posts/atomic-red-team/hero.jpg
-tags: [Detection, Offensive, detection-engineering, MITRE-ATTACK, purple-team, SOC, adversary-emulation, PowerShell]
+tags: [Detection, Offensive, detection-engineering, MITRE-ATTACK, purple-team, SOC, adversary-emulation]
 ---
 ![Atomic Red Team: prove your detections actually fire](/images/posts/atomic-red-team/hero.jpg)
 
@@ -11,7 +11,7 @@ Every SOC has a comfortable assumption baked into it: *"if that happened, we'd s
 
 **Atomic Red Team**, from Red Canary, exists to close that gap. It's a free, open-source library of small, precise tests — "atomics" — each one mapped to a MITRE ATT&CK technique. You run a test that mimics a specific attacker behaviour, then you go look at your tooling and answer one honest question: *did it alert?* It's the single fastest way I know to turn "we'd probably catch that" into "we catch that, here's the alert, logged at 14:03."
 
-> **This is a lab exercise, not a party trick.** These tests run real, if benign, attacker behaviours on a machine. Only run them on systems you own or are authorised to test, ideally an isolated VM you can snapshot and revert — the same kind of lab from my [FLARE-VM](/FLARE-VM-Malware-Analysis-Lab/) and [Kali](/Kali-Linux-Hands-On-Start/) posts. Never on production without change approval and your SOC in the loop.
+> **This is a lab exercise, not a party trick.** These tests run real, if benign, attacker behaviours on a machine. Only run them on systems you own or are authorised to test, ideally an isolated VM you can snapshot and revert — the same kind of lab I set up in my [Kali post](/Kali-Linux-Hands-On-Start/). Never on production without change approval and your SOC in the loop.
 
 ## The idea: one technique, one tiny test
 
@@ -194,7 +194,7 @@ That last row is the pattern that makes this exercise worth it: a technique you 
 Don't try to run all 1,800 tests. Start with the techniques that matter to *your* environment:
 
 - **Map to your threat model.** If you're a Windows shop, start with the ATT&CK techniques most common in the intrusions you actually see — persistence (T1547, T1053), credential access (T1003), execution (T1059), defense evasion (T1562).
-- **Pair it with ATT&CK Navigator.** Colour the techniques you've tested green/yellow/red. The heat map is the most honest picture of your detection posture you'll ever draw, and it maps straight onto the artifacts I cover in the [Windows DFIR Field Reference](/Windows-DFIR-Field-Reference/).
+- **Pair it with ATT&CK Navigator.** Colour the techniques you've tested green/yellow/red. The heat map is the most honest picture of your detection posture you'll ever draw, and it maps straight onto the Windows forensic artifacts an investigator would hunt for after the fact.
 - **Automate the regression.** Once a detection works, re-running its atomic on a schedule catches the day someone "temporarily" disables a logging policy and forgets.
 
 ## A word on doing it safely

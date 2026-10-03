@@ -272,7 +272,7 @@ vol -f /cases/mem.raw windows.dumpfiles --pid 2104 -o /cases/dumped/
 
 A reliable triage order I use on an unknown dump: `windows.info` → `pstree` → `netscan` → `malfind` → `cmdline`. Within five commands you usually have a lead.
 
-> **The artifact isn't the answer:** `malfind` flags *suspicious* memory, not *malicious* memory — legitimate packers and JIT compilers trip it too. Every finding here is a lead to confirm with a second artifact, exactly like the context ladder from my [DFIR paralysis post](/DFIR-Paralysis-Field-Kit/).
+> **The artifact isn't the answer:** `malfind` flags *suspicious* memory, not *malicious* memory — legitimate packers and JIT compilers trip it too. Every finding here is a lead to confirm with a second artifact — never let a single tool's flag be the whole story.
 
 ## Documents, metadata and known-bad
 

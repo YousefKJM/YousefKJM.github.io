@@ -3,9 +3,8 @@ title: "Chasing a Web Shell: A Windows Forensics Walkthrough"
 excerpt: "One uploaded file — a few kilobytes of PHP — becomes a remote doorway into the whole network. This is how you investigate it end to end: why web-shell detection is a process-lineage problem, how to read the web-server logs, and how the MFT, USN journal and Prefetch rebuild the timeline the attacker tried to erase."
 header:
   image: /images/posts/web-shell/hero.jpg
-tags: [DFIR, Detection, web-shell, IIS, Windows, timeline, timestomping, threat-hunting]
+tags: [Incident-Response, DFIR, web-shell, IIS, Windows, timeline, timestomping, threat-hunting]
 ---
-
 ![Chasing a web shell: a Windows forensics walkthrough](/images/posts/web-shell/hero.jpg)
 
 A web shell is one of the highest-leverage things an attacker can plant. It's a server-side script — often a few kilobytes of PHP, ASPX or JSP — that turns an HTTP request into command execution on your server. No VPN, no RDP, no stolen domain credentials. Just one file reachable over the web, and suddenly someone has a remote terminal inside your perimeter. From there it's reconnaissance, new admin accounts, lateral movement, and often ransomware.

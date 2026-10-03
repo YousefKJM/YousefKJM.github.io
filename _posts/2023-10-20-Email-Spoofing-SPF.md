@@ -5,7 +5,6 @@ header:
   image: /images/posts/email-spoofing/hero.jpg
 tags: [Detection, email-security, spoofing, SPF, DKIM, DMARC, phishing, SOC]
 ---
-
 ![Anyone can email as your CEO: spoofing, SPF, and how to shut it down](/images/posts/email-spoofing/hero.jpg)
 
 Here's an uncomfortable demo you can reason through without touching a keyboard. There are free websites — emkei.cz is the one everyone knows — that present a little form: *To, From, Subject, Message.* You type whatever you want in the **From** box — `ceo@yourbank.com`, `it-support@yourcompany.com`, anyone — hit send, and the email goes out claiming to be from that person. No password, no access to their mailbox, nothing. These "online fake mailers" exist to make a point that email security people learned the hard way: **the From address on an email is about as trustworthy as the return address scribbled on a postcard.**

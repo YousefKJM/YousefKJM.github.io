@@ -3,9 +3,8 @@ title: "One Portal to Rule Them All? Sentinel Meets Defender XDR"
 excerpt: "Microsoft folded Sentinel and Defender XDR into a single security.microsoft.com experience — one incident queue, one hunting bar, one copilot. Here's what genuinely changes day to day for an analyst, what to watch out for before you onboard, and whether the hype holds up."
 header:
   image: /images/posts/sentinel-xdr/hero.jpg
-tags: [Detection, Cloud, Sentinel, Defender-XDR, SIEM, KQL, SOC, Microsoft]
+tags: [Detection, Cloud, Sentinel, Defender-XDR, SIEM, KQL, SOC]
 ---
-
 ![Sentinel meets Defender XDR in one portal](/images/posts/sentinel-xdr/hero.jpg)
 
 For years, working a Microsoft SOC meant living in two browser tabs. Defender XDR (security.microsoft.com) for endpoint, identity, email and cloud-app alerts; Azure Sentinel (in the Azure portal) for the SIEM — your custom logs, your analytics rules, your long-term hunting. Same incident, two windows, two query experiences, and a lot of alt-tabbing to stitch a story together. Microsoft has now merged the two into a **single unified portal** at security.microsoft.com, and a sharp walkthrough by <a href="https://medium.com/@junaidmumtaz438/a-closer-look-at-the-unified-microsoft-sentinel-defender-xdr-portal-%EF%B8%8F-64751f9fb767" target="_blank" rel="noopener">Junaid Mumtaz</a> got me thinking about what it actually means for the people doing the work.

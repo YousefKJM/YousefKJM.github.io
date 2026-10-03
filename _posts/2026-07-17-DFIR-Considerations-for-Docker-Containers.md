@@ -1,7 +1,7 @@
 ---
 title: "DFIR Considerations for Docker Containers"
 excerpt: "Containers break a lot of assumptions incident responders take for granted — persistent disk, long-lived processes, a filesystem that looks the same tomorrow as it did today. Here's what actually changes when the thing you're investigating is a Docker container, and how to acquire evidence before it disappears."
-tags: [DFIR, forensics, Docker, containers, cloud]
+tags: [DFIR, Incident-Response, forensics, Docker, containers, cloud]
 ---
 Most DFIR training assumes a host that sits still: a disk you can image, a filesystem that isn't going anywhere, processes that have been running long enough to leave a trail. Containers break most of that. A compromised container can be gone — stopped, removed, rescheduled onto a different node — minutes after the thing that triggered your alert happened. If you don't know what's different going in, you'll lose evidence you didn't even know was time-limited.
 

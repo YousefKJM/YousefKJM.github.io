@@ -85,7 +85,7 @@ sudo apt install -y kali-tools-wireless       # just the wireless tools
 This is the step that separates learning from trouble. You need something to point the tools at, and it must be **yours**, **isolated**, and **meant to be broken**. The standard practice setup:
 
 - A second VM running a deliberately vulnerable system. **Metasploitable 2/3**, **OWASP Juice Shop**, or **DVWA** (Damn Vulnerable Web Application) are purpose-built for this.
-- Both VMs on a **host-only network** with no route to the internet or your home LAN. The malware-lab isolation diagram from my [FLARE-VM post](/FLARE-VM-Malware-Analysis-Lab/) applies here too: nothing you do should be able to reach anything real.
+- Both VMs on a **host-only network** with no route to the internet or your home LAN. The same rule any malware or testing lab lives by applies here: nothing you do should be able to reach anything real.
 
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 210" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Practice lab: a Kali VM and a deliberately vulnerable target VM such as Metasploitable, DVWA or Juice Shop, both on an isolated host-only network with no route to the internet or the home LAN; the host snapshots both VMs">
@@ -222,7 +222,7 @@ Two toolsets you'll meet early:
 
 ## Phase 6: the report (where the value is)
 
-Every tool above produces output; none of it helps anyone until it's a report. The habit that makes you useful: as you work, keep structured notes — which target, which finding, the evidence, the severity, and the fix. Kali even ships note-taking and reporting tools (CherryTree, Faraday) for this. A good finding reads like the outcome-first style from my [DFIR paralysis post](/DFIR-Paralysis-Field-Kit/):
+Every tool above produces output; none of it helps anyone until it's a report. The habit that makes you useful: as you work, keep structured notes — which target, which finding, the evidence, the severity, and the fix. Kali even ships note-taking and reporting tools (CherryTree, Faraday) for this. A good finding reads outcome-first — what's wrong, what it affects, how to prove it, and how to fix it:
 
 ```text
 FINDING   : <what's wrong, one sentence>
