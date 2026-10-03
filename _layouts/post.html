@@ -14,6 +14,27 @@ layout: default
     </div>
   </header>
 
+  {% assign show_toc = false %}
+  {% if read_mins >= 5 %}{% assign show_toc = true %}{% endif %}
+  {% if page.toc == true %}{% assign show_toc = true %}{% endif %}
+  {% if page.toc == false %}{% assign show_toc = false %}{% endif %}
+  {% assign heads = content | split: '<h2 id="' %}
+  {% if show_toc and heads.size > 2 %}
+  <details class="toc" open>
+    <summary class="toc__summary">On this page</summary>
+    <nav aria-label="Table of contents">
+      <ol class="toc__list">
+        {% for item in heads offset: 1 %}
+          {% assign head = item | split: '</h2>' | first %}
+          {% assign id = head | split: '">' | first %}
+          {% assign text = head | split: '">' | last | strip_html | strip %}
+          <li><a class="toc__link" href="#{{ id }}">{{ text }}</a></li>
+        {% endfor %}
+      </ol>
+    </nav>
+  </details>
+  {% endif %}
+
   <div class="post__content">
     {{ content }}
   </div>
