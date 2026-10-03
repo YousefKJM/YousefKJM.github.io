@@ -11,6 +11,27 @@
   });
 })();
 
+/* ---- Post page: floating "back to contents" button ---- */
+(function () {
+  var btn = document.getElementById('to-toc');
+  var toc = document.getElementById('toc');
+  if (!btn || !toc) return;
+
+  function onScroll() {
+    // Show once the TOC has scrolled out of view near the top.
+    var past = toc.getBoundingClientRect().bottom < 0;
+    btn.hidden = !past;
+  }
+
+  btn.addEventListener('click', function () {
+    if (toc.open === false) toc.open = true;
+    toc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
 /* ---- Home page: category + keyword post filter ---- */
 (function () {
   var root = document.getElementById('post-filter');

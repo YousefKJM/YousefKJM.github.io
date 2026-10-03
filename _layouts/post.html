@@ -20,7 +20,7 @@ layout: default
   {% if page.toc == false %}{% assign show_toc = false %}{% endif %}
   {% assign heads = content | split: '<h2 id="' %}
   {% if show_toc and heads.size > 2 %}
-  <details class="toc" open>
+  <details class="toc" id="toc" open>
     <summary class="toc__summary">On this page</summary>
     <nav aria-label="Table of contents">
       <ol class="toc__list">
@@ -50,3 +50,9 @@ layout: default
     <a class="post__back post__back--footer" href="{{ '/' | relative_url }}">&larr; Back to all posts</a>
   </footer>
 </article>
+{% if show_toc and heads.size > 2 %}
+<button type="button" class="to-toc" id="to-toc" aria-label="Back to table of contents" hidden>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+  <span class="to-toc__label">Contents</span>
+</button>
+{% endif %}
