@@ -3,7 +3,7 @@ title: "Chasing a Web Shell: A Windows Forensics Walkthrough"
 excerpt: "One uploaded file — a few kilobytes of PHP — becomes a remote doorway into the whole network. This is how you investigate it end to end: why web-shell detection is a process-lineage problem, how to read the web-server logs, and how the MFT, USN journal and Prefetch rebuild the timeline the attacker tried to erase."
 header:
   image: /images/posts/web-shell/hero.jpg
-tags: [Incident-Response, DFIR, web-shell, IIS, Windows, timeline, timestomping, threat-hunting]
+tags: [DFIR, Forensics, Incident-Response, web-shell, IIS, Windows, timeline, timestomping, threat-hunting]
 ---
 ![Chasing a web shell: a Windows forensics walkthrough](/images/posts/web-shell/hero.jpg)
 

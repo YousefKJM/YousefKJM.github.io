@@ -2,7 +2,7 @@
 title: "MCFE Exam Prep: Interactive Study App"
 excerpt: "A fully interactive study tool for the Magnet Certified Forensics Examiner (MCFE) exam — 100 practice questions, module summaries, mind maps, DFIR lab reference, community tips, and a pre-exam checklist. Built while studying for the cert."
 layout: post
-tags: [DFIR, forensics, certification, MCFE]
+tags: [DFIR, Forensics, certification, MCFE]
 ---
 I built this while studying for the **Magnet Certified Forensics Examiner (MCFE)** certification. Rather than a static notes page, I put everything into an interactive tool: a 100-question practice bank, collapsible module summaries, mind maps for all 12 AX200 modules, a searchable DFIR lab reference, community intel from practitioners who've sat the exam, and a pre-exam checklist.
 

@@ -15,8 +15,8 @@ layout: default
   </div>
 </section>
 
-{% assign cats   = "DFIR,Incident-Response,Malware-Analysis,Detection,Offensive,Cloud,AI,Software,Web" | split: "," %}
-{% assign labels = "DFIR & Forensics,Incident Response,Malware Analysis,Detection & SOC,Offensive,Cloud & Identity,AI & ML,Software,Web & Mobile" | split: "," %}
+{% assign cats   = "DFIR,Forensics,Incident-Response,Malware-Analysis,Detection,Offensive,Cloud,AI,Software,Web" | split: "," %}
+{% assign labels = "DFIR,Digital Forensics,Incident Response,Malware Analysis,Detection & SOC,Offensive,Cloud & Identity,AI & ML,Software,Web & Mobile" | split: "," %}
 <section class="wrap filter" id="post-filter" data-nojs-hidden>
   {% capture all_years %}{% for post in site.posts %}{{ post.date | date: "%Y" }} {% endfor %}{% endcapture %}
   {% assign years = all_years | split: " " | uniq | sort | reverse %}

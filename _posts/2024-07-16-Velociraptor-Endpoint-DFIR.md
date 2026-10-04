@@ -3,7 +3,7 @@ title: "Velociraptor: Hunting Across Every Endpoint at Once"
 excerpt: "The second tool from my manager's DFIR research. Velociraptor puts a VQL engine on every endpoint, so one query — from one browser tab — can sweep a thousand machines in seconds. A hands-on tour: Instant Velociraptor, VQL, artifacts, hunts, notebooks, live monitoring and offline collectors."
 header:
   image: /images/posts/velociraptor/hero.svg
-tags: [DFIR, Incident-Response, Velociraptor, VQL, endpoint, forensics]
+tags: [DFIR, Forensics, Incident-Response, Velociraptor, VQL, endpoint]
 ---
 ![Velociraptor: hunt across every endpoint at once](/images/posts/velociraptor/hero.svg)
 

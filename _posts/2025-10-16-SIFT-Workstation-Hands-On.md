@@ -3,7 +3,7 @@ title: "SIFT Workstation: Your Free Forensics Lab, From Boot to First Timeline"
 excerpt: "A disk image, a memory dump, and a free Ubuntu VM with 300+ forensic tools already wired up. This is the hands-on SIFT guide I wish I'd had on day one — install it, mount evidence safely, and run every core tool with real commands."
 header:
   image: /images/posts/sift/hero.jpg
-tags: [DFIR, forensics, SIFT, timeline, memory, tools]
+tags: [DFIR, Forensics, SIFT, timeline, memory, tools]
 ---
 ![SIFT Workstation: the free forensics lab, from boot to first timeline](/images/posts/sift/hero.jpg)
 

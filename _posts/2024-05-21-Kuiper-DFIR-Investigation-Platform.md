@@ -3,7 +3,7 @@ title: "Kuiper: A Team-Scale Home for Your Forensic Artifacts"
 excerpt: "My manager asked me to look into open-source DFIR platforms, and two names kept coming back. This is the hands-on getting-to-know guide for the first one — Kuiper: install it with Docker, feed it triage data, and parse, search, tag and alert across a whole case from one browser tab."
 header:
   image: /images/posts/kuiper/hero.svg
-tags: [DFIR, Incident-Response, Kuiper, forensics, parsers, triage]
+tags: [DFIR, Forensics, Incident-Response, Kuiper, parsers, triage]
 ---
 ![Kuiper: a team-scale home for your forensic artifacts](/images/posts/kuiper/hero.svg)
 

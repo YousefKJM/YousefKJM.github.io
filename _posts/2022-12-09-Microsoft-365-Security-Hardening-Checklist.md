@@ -1,7 +1,7 @@
 ---
 title: "Hardening Microsoft 365: An Admin Checklist with PowerShell"
 excerpt: "Phished password, no MFA, a silent forwarding rule — the same Microsoft 365 compromise, again and again. The settings that stop it, the PowerShell that proves they're on, and the first 15 minutes when one gets through."
-tags: [Detection, Incident-Response, M365, hardening, PowerShell, SOC, email-security]
+tags: [Detection, M365, hardening, PowerShell, SOC, email-security]
 ---
 <div style="margin:2rem 0;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-m);">
 <svg viewBox="0 0 640 290" style="width:100%;height:auto;font-family:inherit;" role="img" aria-label="Five defensive layers stacked by priority: identity first, then privileged access, email, data protection, and logging and monitoring at the base supporting all the others">

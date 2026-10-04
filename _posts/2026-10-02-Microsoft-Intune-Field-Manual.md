@@ -3,7 +3,7 @@ title: "Microsoft Intune Field Manual: Architecture, Build, SIEM Logging, DFIR a
 excerpt: "Intune can run code as SYSTEM on every laptop you own — and in 2026 attackers used exactly that to wipe a company's devices. Architecture, network, modules, SIEM logging, DFIR and a security review, all in one field manual."
 header:
   image: /images/posts/intune/hero.jpg
-tags: [Cloud, Detection, DFIR, Intune, SIEM, M365]
+tags: [Cloud, Detection, DFIR, Forensics, Intune, SIEM, M365]
 ---
 ![Microsoft Intune field manual: architecture, build, network, SIEM logging, DFIR and security review](/images/posts/intune/hero.jpg)
 
