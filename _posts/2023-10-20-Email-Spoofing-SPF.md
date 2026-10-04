@@ -3,7 +3,7 @@ title: "Anyone Can Email as Your CEO: Spoofing, SPF, and How to Shut It Down"
 excerpt: "Free web tools let a stranger send mail that says it's from your CEO, because plain SMTP never checked who the sender really is. Here's why spoofing is so easy, how SPF, DKIM and DMARC actually stop it, how to read a header to catch a fake — and how to test your own domain before an attacker does."
 header:
   image: /images/posts/email-spoofing/hero.jpg
-tags: [Detection, email-security, spoofing, SPF, DKIM, DMARC, phishing, SOC]
+tags: [Hardening, Detection, email-security, spoofing, SPF, DKIM, DMARC, phishing, SOC]
 ---
 ![Anyone can email as your CEO: spoofing, SPF, and how to shut it down](/images/posts/email-spoofing/hero.jpg)
 

@@ -3,7 +3,7 @@ title: "Global Admin Is Not Azure Owner: Designing Microsoft Entra PIM Across Th
 excerpt: "Global Administrator can't touch an Azure VM — until one toggle makes it owner of every subscription. Three access layers, the bridges between them, and a real PIM rollout with code, detections and DFIR questions."
 header:
   image: /images/posts/pim/hero.jpg
-tags: [Cloud, Detection, identity, PIM, Azure, M365]
+tags: [Hardening, Cloud, Detection, identity, PIM, Azure, M365]
 ---
 ![Global Admin is not Azure Owner: designing Microsoft Entra PIM across three access layers](/images/posts/pim/hero.jpg)
 
