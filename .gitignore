@@ -13,3 +13,6 @@ Gemfile
 Gemfile.lock
 node_modules
 package.json
+
+# local-only draft/version backups (archived off-repo)
+_backup/
