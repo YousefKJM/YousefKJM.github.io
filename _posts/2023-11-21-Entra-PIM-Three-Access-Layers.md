@@ -11,6 +11,10 @@ A short LinkedIn post by <a href="https://www.linkedin.com/feed/update/urn:li:ac
 
 In incident response I rarely see an attacker "hack" a firewall. I see them <strong>walk a privilege path</strong>: a helpdesk account that can reset an admin's password, an app registration that can grant itself roles, a Global Admin who flips one toggle and becomes owner of every Azure subscription. So let's take that three-layer idea further — the layers, the hidden bridges between them, and a complete rollout with settings, code, detections and the forensic questions behind it.
 
+![Entra roles vs Azure roles vs PIM for Groups — the three privileged-access layers at a glance: what each one controls, how it works, common mistakes, and the key question to ask before configuring PIM](/images/posts/pim/roles-overview.jpg)
+
+*The whole post in one picture: three different access models for three different problems. The sections below unpack each layer, the bridges between them, and how to roll PIM out across all three.*
+
 ## Two permission worlds, and one bridge
 Microsoft's cloud has two separate authorization systems that look similar but don't share permissions:
 
