@@ -1,5 +1,5 @@
 ---
-title: "Building a Secure Website, Layer by Layer: A DFIR Specialist's Checklist"
+title: "Building a Secure Website, Layer by Layer: A Defense-in-Depth Checklist"
 excerpt: "Most 'secure your website' guides stop at HTTPS and a login form. This is the checklist I'd actually use — DNS to database, headers to CI/CD — written from the other side of the fence: I'm usually the one investigating what happens when one of these layers gets skipped."
 tags: [Detection, security, web, hardening, TLS]
 ---
