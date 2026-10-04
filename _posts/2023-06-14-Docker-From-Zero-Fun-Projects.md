@@ -174,6 +174,64 @@ And one concept worth knowing early: **volumes**. A container's own filesystem i
 
 > **A little caution:** containers are isolated, not magic. Only run images from sources you trust (official images on Docker Hub are a safe start), don't paste `docker run` commands you don't understand that mount your whole disk, and remember that `-p` exposes a port on your network. For the *serious* flip side — what containers mean when you're the one investigating a breach — see my [DFIR considerations for Docker](/DFIR-Considerations-for-Docker-Containers/).
 
+## The cheat sheet I keep nearby
+
+Ninety percent of day-to-day Docker is a dozen commands. Here's the set worth pinning above your desk.
+
+**Running & managing containers**
+
+```bash
+docker run -d -p 8080:80 nginx       # run detached, map host:container ports
+docker run --rm -it ubuntu bash      # interactive shell, auto-delete on exit
+docker ps                            # containers running now
+docker ps -a                         # all containers, including stopped
+docker stop <name|id>                # graceful stop
+docker start <name|id>               # start a stopped one
+docker rm <name|id>                  # remove a container (add -f to force)
+docker restart <name|id>             # stop + start
+```
+
+**Images**
+
+```bash
+docker images                        # images on disk
+docker pull postgres:16              # fetch an image from the registry
+docker build -t my-site .            # build an image from a Dockerfile
+docker tag my-site user/my-site:1.0  # name it for pushing
+docker push user/my-site:1.0         # publish to a registry
+docker rmi <image>                   # delete an image
+```
+
+**Look inside & debug** (the ones that save you)
+
+```bash
+docker logs -f <name>                # follow a container's output (live tail)
+docker exec -it <name> bash          # open a shell inside a running container
+docker inspect <name>                # full JSON: IPs, mounts, env, ports
+docker stats                         # live CPU/memory per container
+docker cp <name>:/path ./local       # copy files out of (or into) a container
+```
+
+**Compose** (multi-container projects)
+
+```bash
+docker compose up -d                 # start the whole stack in the background
+docker compose ps                    # what's running in this project
+docker compose logs -f web           # follow one service's logs
+docker compose exec web sh           # shell into a service
+docker compose down                  # stop & remove (add -v to drop volumes)
+```
+
+**Reclaim disk** (run these when things feel bloated)
+
+```bash
+docker system df                     # how much space Docker is using
+docker system prune                  # remove stopped containers + unused data
+docker system prune -a --volumes     # aggressive: also unused images & volumes
+```
+
+> **Two shortcuts I use constantly:** `docker logs -f <name>` the moment something misbehaves (the answer is almost always in there), and `docker exec -it <name> bash` to poke around *inside* a container as if you'd SSH'd in — no SSH required.
+
 ## Where this leaves you
 
 Docker's whole promise is that the gap between "it runs on my laptop" and "it runs on a server for the world" collapses into one image you can hand to anyone. Start with the website — `docker run -d -p 8080:80 nginx` — then pick one idea from the list and give yourself a weekend. The best way to learn Docker isn't a course; it's self-hosting something you actually want to use.
