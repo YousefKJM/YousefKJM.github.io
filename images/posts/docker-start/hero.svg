@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Docker from zero: host a website and other fun things in containers">
+  <defs>
+    <radialGradient id="dg" cx="28%" cy="30%" r="95%"><stop offset="0%" stop-color="#0e2a3a"/><stop offset="100%" stop-color="#0b0f17"/></radialGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#dg)"/>
+  <g stroke="#13202c" stroke-width="1" opacity="0.7"><path d="M0 125H1200M0 250H1200M0 375H1200M200 0V500M400 0V500M600 0V500M800 0V500M1000 0V500"/></g>
+  <!-- wavy water line -->
+  <path d="M60 400 Q110 384 160 400 T260 400 T360 400 T460 400" fill="none" stroke="#1e8f82" stroke-width="2" opacity="0.7"/>
+  <!-- ship hull carrying stacked containers -->
+  <g>
+    <path d="M70 372 L450 372 L420 420 L100 420 Z" fill="#0b0f17" stroke="#2dd4bf" stroke-width="2.5"/>
+    <g>
+      <rect x="110" y="300" width="80" height="34" rx="4" fill="#11313a" stroke="#2dd4bf" stroke-width="1.6"/>
+      <rect x="200" y="300" width="80" height="34" rx="4" fill="#11313a" stroke="#2dd4bf" stroke-width="1.6"/>
+      <rect x="290" y="300" width="80" height="34" rx="4" fill="#11313a" stroke="#2dd4bf" stroke-width="1.6"/>
+      <rect x="155" y="262" width="80" height="34" rx="4" fill="#0e2a3a" stroke="#5eead4" stroke-width="1.6"/>
+      <rect x="245" y="262" width="80" height="34" rx="4" fill="#0e2a3a" stroke="#5eead4" stroke-width="1.6"/>
+      <rect x="200" y="224" width="80" height="34" rx="4" fill="#0b0f17" stroke="#5eead4" stroke-width="1.6"/>
+    </g>
+  </g>
+  <text x="520" y="150" fill="#e7e9f0" font-size="66" font-weight="800" letter-spacing="-1">Docker, from zero</text>
+  <text x="522" y="205" fill="#5eead4" font-size="24" font-weight="600">Pack your app with its whole world — ship it anywhere</text>
+  <text x="522" y="250" fill="#9aa3b8" font-size="19">Host a website in 30 seconds. Then build your own little cloud.</text>
+  <g font-size="15" fill="#c7cdda">
+    <rect x="522" y="300" width="150" height="34" rx="17" fill="#11313a" stroke="#2dd4bf"/><text x="597" y="322" text-anchor="middle">run</text>
+    <rect x="684" y="300" width="150" height="34" rx="17" fill="#11313a" stroke="#2dd4bf"/><text x="759" y="322" text-anchor="middle">build</text>
+    <rect x="846" y="300" width="150" height="34" rx="17" fill="#11313a" stroke="#2dd4bf"/><text x="921" y="322" text-anchor="middle">compose</text>
+  </g>
+  <text x="522" y="392" fill="#616a80" font-size="14" font-style="italic">One command, and it just runs — no "works on my machine"</text>
+</svg>
