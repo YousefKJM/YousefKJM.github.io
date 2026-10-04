@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Velociraptor: hunt across every endpoint at once">
+  <defs>
+    <radialGradient id="vg" cx="30%" cy="30%" r="90%">
+      <stop offset="0%" stop-color="#11313a"/><stop offset="100%" stop-color="#0b0f17"/>
+    </radialGradient>
+    <marker id="va" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="1200" height="500" fill="url(#vg)"/>
+  <g stroke="#1b2430" stroke-width="1" opacity="0.6">
+    <path d="M0 125 H1200 M0 250 H1200 M0 375 H1200 M200 0 V500 M400 0 V500 M600 0 V500 M800 0 V500 M1000 0 V500"/>
+  </g>
+  <!-- central server -->
+  <g>
+    <circle cx="300" cy="250" r="52" fill="#0b0f17" stroke="#2dd4bf" stroke-width="2.5"/>
+    <text x="300" y="245" text-anchor="middle" fill="#5eead4" font-size="16" font-weight="700">SERVER</text>
+    <text x="300" y="266" text-anchor="middle" fill="#9aa3b8" font-size="12">VQL engine</text>
+  </g>
+  <!-- endpoints -->
+  <g>
+    <g><line x1="350" y1="235" x2="520" y2="110" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#va)"/></g>
+    <g><line x1="352" y1="250" x2="540" y2="250" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#va)"/></g>
+    <g><line x1="350" y1="268" x2="520" y2="390" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#va)"/></g>
+    <g><line x1="345" y1="215" x2="500" y2="180" stroke="#1e8f82" stroke-width="1.2"/></g>
+    <g><line x1="345" y1="288" x2="500" y2="320" stroke="#1e8f82" stroke-width="1.2"/></g>
+  </g>
+  <g fill="#0b0f17" stroke="#3a4557" stroke-width="1.5">
+    <rect x="520" y="92" width="44" height="34" rx="5"/><rect x="540" y="233" width="44" height="34" rx="5"/>
+    <rect x="520" y="372" width="44" height="34" rx="5"/><rect x="500" y="162" width="36" height="28" rx="4"/>
+    <rect x="500" y="306" width="36" height="28" rx="4"/>
+  </g>
+  <!-- title -->
+  <text x="650" y="150" fill="#e7e9f0" font-size="62" font-weight="800" letter-spacing="-1">Velociraptor</text>
+  <text x="652" y="205" fill="#5eead4" font-size="24" font-weight="600">Hunt across every endpoint at once</text>
+  <text x="652" y="250" fill="#9aa3b8" font-size="19">One VQL query. One click. The whole fleet answers in seconds.</text>
+  <g font-size="15" fill="#c7cdda">
+    <rect x="652" y="300" width="130" height="34" rx="17" fill="#11313a" stroke="#2dd4bf" stroke-width="1"/><text x="717" y="322" text-anchor="middle">VQL</text>
+    <rect x="794" y="300" width="130" height="34" rx="17" fill="#11313a" stroke="#2dd4bf" stroke-width="1"/><text x="859" y="322" text-anchor="middle">Artifacts</text>
+    <rect x="936" y="300" width="130" height="34" rx="17" fill="#11313a" stroke="#2dd4bf" stroke-width="1"/><text x="1001" y="322" text-anchor="middle">Hunts</text>
+  </g>
+  <text x="652" y="390" fill="#616a80" font-size="14" font-style="italic">Open-source endpoint DFIR &amp; live-response platform</text>
+</svg>
