@@ -1,10 +1,10 @@
 ---
 title: "CISSP Exam Prep: Interactive Study App"
-excerpt: "A fully interactive study tool for the ISC2 CISSP exam: 500 practice questions with study and timed exam modes, mind maps for all 8 domains, a 30-video MindMaps track, spaced-repetition flashcards, and manager-mindset scenario drills. Built while studying for the cert."
+excerpt: "A fully interactive study tool for the ISC2 CISSP exam: 548 practice questions with study and timed exam modes, mind maps for all 8 domains, a 30-video MindMaps track, spaced-repetition flashcards, and manager-mindset scenario drills. Built while studying for the cert."
 layout: post
 tags: [CISSP, certification, GRC, security-leadership]
 ---
-This is an interactive study app I built for the **ISC2 CISSP** exam. CISSP is a different animal. It's less about knowing where an artifact lives and more about choosing the answer a CISO would give the board. So the app trains judgment as much as recall: a 500-question bank with a timed exam mode, mind maps and study notes for all 8 domains, a guided video track, spaced-repetition flashcards, and scenario drills written from the manager's chair.
+This is an interactive study app I built for the **ISC2 CISSP** exam. CISSP is a different animal. It's less about knowing where an artifact lives and more about choosing the answer a CISO would give the board. So the app trains judgment as much as recall: a 548-question bank with a timed exam mode, mind maps and study notes for all 8 domains, a guided video track, spaced-repetition flashcards, and scenario drills written from the manager's chair.
 
 Use it below. It runs entirely in the browser, no account required.
 
@@ -25,8 +25,8 @@ Use it below. It runs entirely in the browser, no account required.
 
 ## What's inside
 
-**Practice Exam (500 questions)**  
-Original questions written to the 2024 exam outline, each with an explanation of why the best answer beats the distractors. Two modes:
+**Practice Exam (548 questions)**  
+Original questions covering every subtopic in the 2024 exam outline, each with an explanation of why the best answer beats the distractors. Two modes:
 - **Study:** see the answer after every question.
 - **Exam:** timed at 1.2 minutes per question, and answers lock on submit, just like the real adaptive (CAT) exam.
 
@@ -39,13 +39,16 @@ Condensed key points and an interactive concept map for each of the 8 domains, f
 All 30 videos from Destination Certification's [CISSP MindMaps](https://www.youtube.com/playlist?list=PLZKdGEfEyJhLd-pJhAD7dNbJyUgpqI4pu) playlist, about 7 hours in total, mapped to their domains. Tick each one off as you watch, see how much runtime is left, and run a quick drill on that topic while it's fresh.
 
 **Flashcards**  
-134 terms, formulas and models with Leitner spaced repetition. Cards you know come back less often; misses come back tomorrow.
+177 terms, formulas and models with Leitner spaced repetition. Cards you know come back less often; misses come back tomorrow.
 
 **Scenario Lab**  
 16 judgment cases: the board wants zero risk, a vendor refuses audit rights, ransomware at 2 a.m., a pen test with no paperwork. Work out your answer, then compare it with the reasoning.
 
+**Exam Countdown**  
+Set your exam date and the home screen counts down, sets a daily question target, and names the domain to study next. In the final month it switches to full timed 150-question runs.
+
 **Quick Reference & Progress**  
-Instant search across every term and study note. Per-domain accuracy tells you exactly where to spend your next hour.
+Instant search across every term and study note. Per-domain accuracy tells you exactly where to spend your next hour. Export a backup file to move your progress to another device.
 
 ---
 

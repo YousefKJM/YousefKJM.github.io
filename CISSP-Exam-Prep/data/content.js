@@ -19,7 +19,7 @@ window.STUDY = {
    "Quantitative: SLE = AV × EF, ALE = SLE × ARO. Safeguard value = ALE(before) − ALE(after) − annual cost.",
    "BIA → identify critical functions, MTD, then RTO/RPO. Rule: RTO + WRT ≤ MTD.",
    "Personnel security: background checks, NDAs, SoD, job rotation, mandatory vacation, least privilege, secure onboarding and offboarding.",
-   "(ISC)² Code of Ethics canons, in order: Society → Honorable/Legal → Principals → Profession.",
+   "ISC2 Code of Ethics canons, in order: Society → Honorable/Legal → Principals → Profession.",
    "Legal: criminal, civil, administrative. IP: patent, trademark, copyright, trade secret. Privacy: GDPR (72-hour notice), HIPAA, GLBA, SOX, PCI DSS (contractual).",
    "Supply chain risk management: assess vendors pre-contract, set SLAs, right-to-audit, breach notification, and ask for SOC 2 Type II.",
    "Threat modeling: STRIDE, PASTA (7-stage, risk-centric), VAST, attack trees, DREAD (scoring).",
@@ -166,7 +166,7 @@ window.TIPS = [
  {t:"CAT format: no going back",b:"The English exam is Computerized Adaptive Testing: 100–150 items in 3 hours, passing score 700/1000. You can't skip or return. Answer each question carefully and move on. Hard questions mean you're doing well."},
  {t:"Pace yourself",b:"Budget about 1.2 minutes per item (180 min / 150). Take the optional break. Don't panic if the exam stops at 100; that can mean a confident pass or fail decision."},
  {t:"Eliminate extremes and absolutes",b:"Options with 'always', 'never', 'all', 'immediately fire' or 'wipe everything' are often traps unless the topic is life safety."},
- {t:"(ISC)² vocabulary",b:"Use their terms: 'senior management', 'data owner', 'due care'. If an answer uses precise official terminology and the other uses informal wording, lean to the official one."},
+ {t:"ISC2 vocabulary",b:"Use their terms: 'senior management', 'data owner', 'due care'. If an answer uses precise official terminology and the other uses informal wording, lean to the official one."},
 ];
 
 window.SCENARIOS = [

@@ -88,6 +88,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .tile.wide{grid-column:span 3;flex-direction:row;align-items:center;gap:14px}
 .tile.wide div{flex:1;min-width:0}
 
+/* Countdown */
+.countdown{margin-bottom:22px;border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.cd-main{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:start}
+.cd-days{display:flex;flex-direction:column;align-items:center;min-width:92px;padding:6px 10px;border-right:1px solid var(--line)}
+.cd-days b{font-family:var(--f-display);font-size:2.6rem;line-height:1;color:var(--accent)}
+.cd-days span{font-size:.8rem;color:var(--muted);margin-top:4px}
+@media (max-width:520px){ .cd-main{grid-template-columns:1fr} .cd-days{flex-direction:row;gap:8px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px;justify-content:flex-start} }
+
 /* Study */
 .points{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
 .points li{padding:12px 0 12px 22px;border-bottom:1px solid var(--line);position:relative}
@@ -214,6 +222,8 @@ mark{background:color-mix(in srgb,var(--accent) 35%,transparent);color:inherit;b
 <script src="data/q5.js"></script>
 <script src="data/q6.js"></script>
 <script src="data/q7.js"></script>
+<script src="data/q8.js"></script>
+<script src="data/outline.js"></script>
 <script src="data/videos.js"></script>
 <script>
 (() => {
@@ -242,12 +252,81 @@ const svg = (tag, attrs, ...kids) => { const el = document.createElementNS("http
 const hash = s => { let x = 0; for (let i=0;i<s.length;i++) x = (x*31 + s.charCodeAt(i))|0; return (x>>>0).toString(36); };
 Q.forEach(q => q.id = q.d + "-" + hash(q.q));
 
-// ── progress (per-viewer, this browser) ──
+// ── progress (this browser; synced across devices on claude.ai) ──
 const KEY = "cissp-prep-v1";
-let P = { qs:{}, exams:[], cards:{}, videos:{} };
+const blankP = () => ({ qs:{}, exams:[], cards:{}, videos:{}, daily:{}, settings:{} });
+let P = blankP();
 try { const s = localStorage.getItem(KEY); if (s) P = Object.assign(P, JSON.parse(s)); } catch {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch {} };
-function record(q, ok){ const r = P.qs[q.id] || {n:0,c:0}; r.n++; if (ok) r.c++; r.last = ok?1:0; P.qs[q.id] = r; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch {} scheduleSync(); };
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+function record(q, ok){ const r = P.qs[q.id] || {n:0,c:0}; r.n++; if (ok) r.c++; r.last = ok?1:0; P.qs[q.id] = r;
+  const t = today(); P.daily[t] = (P.daily[t]||0) + 1; }
+
+// Merge two progress snapshots without losing work done on either device.
+function mergeP(a, b){
+  const m = blankP();
+  for (const id of new Set([...Object.keys(a.qs||{}), ...Object.keys(b.qs||{})])){ const x = a.qs?.[id], y = b.qs?.[id]; m.qs[id] = !x ? y : !y ? x : (y.n > x.n ? y : x); }
+  const ex = new Map(); [...(a.exams||[]), ...(b.exams||[])].forEach(e => ex.set(e.date, e));
+  m.exams = [...ex.values()].sort((p,q)=>p.date<q.date?-1:1).slice(-30);
+  for (const t of new Set([...Object.keys(a.cards||{}), ...Object.keys(b.cards||{})])){ const x = a.cards?.[t], y = b.cards?.[t]; m.cards[t] = !x ? y : !y ? x : (y.due > x.due ? y : x); }
+  m.videos = Object.assign({}, b.videos, a.videos);
+  for (const d of new Set([...Object.keys(a.daily||{}), ...Object.keys(b.daily||{})])) m.daily[d] = Math.max(a.daily?.[d]||0, b.daily?.[d]||0);
+  m.settings = (b.settings?.updated||0) > (a.settings?.updated||0) ? b.settings : (a.settings||{});
+  return m;
+}
+
+// ── cross-device sync: a private per-person record, only where claude.ai provides one ──
+let syncRef = null, syncStatus = "off", syncTimer = null, syncBusy = false, lastPushed = "";
+function scheduleSync(){ if (!syncRef) return; clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 2500); }
+async function pushSync(){
+  if (!syncRef || syncBusy) return;
+  const body = JSON.stringify(P); if (body === lastPushed) return;
+  syncBusy = true;
+  try { await syncRef.set({ p: body, at: Date.now() }); lastPushed = body; syncStatus = "on"; }
+  catch (e) { syncStatus = "error"; }
+  syncBusy = false;
+  if (JSON.stringify(P) !== lastPushed) scheduleSync();
+}
+(async () => {
+  try {
+    const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
+    const uid = db && user ? await user.id() : null;
+    if (!uid) return;
+    syncRef = db.doc("data/users/" + uid + "/progress");
+    const snap = await syncRef.get();
+    if (snap.exists){ try { P = mergeP(P, JSON.parse(snap.data().p)); } catch {} }
+    try { localStorage.setItem(KEY, JSON.stringify(P)); } catch {}
+    syncStatus = "on"; await pushSync(); render();
+  } catch { syncRef = null; syncStatus = "error"; }
+})();
+
+// ── backup file (works everywhere, including the blog embed) ──
+async function exportProgress(){
+  const data = JSON.stringify({ app:"cissp-prep", v:1, exported:new Date().toISOString(), p:P }, null, 1);
+  const filename = `cissp-progress-${today()}.json`;
+  try { const dl = await window.claude?.use?.("downloads"); if (dl){ await dl.save({ filename, data }); return; } } catch { return; }
+  const a = h("a",{href:URL.createObjectURL(new Blob([data],{type:"application/json"})),download:filename}); document.body.append(a); a.click(); a.remove();
+}
+function importProgress(file, done){
+  file.text().then(t => { const j = JSON.parse(t); if (j.app !== "cissp-prep" || !j.p) throw 0; P = mergeP(P, j.p); save(); done("Imported and merged with this device's progress."); })
+    .catch(() => done("That file isn't a CISSP progress backup."));
+}
+
+// ── exam countdown ──
+const VOUCHER_EXPIRES = "2027-10-06";
+const DEFAULT_EXAM = "2027-09-29"; // one week before the voucher expires, until a date is booked
+const examPlan = () => {
+  const s = P.settings || {}, date = s.examDate || DEFAULT_EXAM;
+  const t0 = new Date(today()+"T00:00"), days = Math.round((new Date(date+"T00:00") - t0) / 864e5);
+  return { date, booked: !!s.booked, days };
+};
+function studyNext(){
+  const st = D.map(x => ({...x, ...domainStats(x.d)}));
+  const tested = st.filter(s => s.pct != null && s.seen >= 10 && s.pct < 70).sort((a,b)=>a.pct-b.pct);
+  if (tested.length) return { d: tested[0], why: `${tested[0].pct}% accuracy, below the 70% target` };
+  const gap = st.map(s => ({ s, score: s.weight * (1 - s.seen/s.total) })).sort((a,b)=>b.score-a.score)[0].s;
+  return { d: gap, why: `${gap.total-gap.seen} of ${gap.total} questions still unseen` };
+}
 function domainStats(d){
   let n=0,c=0,seen=0; const qs = Q.filter(q=>q.d===d);
   qs.forEach(q => { const r = P.qs[q.id]; if (r){ seen++; n+=r.n; c+=r.c; } });
@@ -313,6 +392,7 @@ VIEWS.home = () => {
     h("div",{class:"facts"},
       [["100–150","Questions (CAT)"],["3 hrs","Time limit"],["700","Pass, of 1000 scaled"],["5 yrs","Experience, 2+ domains"]]
         .map(([b,s])=>h("div",{class:"fact"},h("b",{class:"mono"},b),h("span",{},s)))),
+    countdownPanel(),
     h("section",{class:"ready"},
       h("div",{class:"ready-head"},
         h("div",{class:"row"}, h("h3",{},"Domain readiness"), h("button",{class:"back",onclick:()=>go("progress")}, answered ? "Details →" : "")),
@@ -332,6 +412,50 @@ VIEWS.home = () => {
       h("button",{class:"tile wide",css:{"--tc":"var(--good)"},onclick:()=>go("motive")}, h("span",{class:"ico"},"✓"), h("div",{},h("h3",{},"You've got this"), h("p",{}, last ? `Last exam: ${last.score}% on ${last.n} questions` : "Read this the night before the exam.")), h("span",{class:"muted"},"→")))
   );
 };
+
+const fmtDate = s => new Date(s+"T00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+function countdownPanel(){
+  const pl = examPlan(), t = today(), done = P.daily[t] || 0;
+  if (vstate.editDate){
+    const date = h("input",{type:"date",class:"search",value:pl.date,max:VOUCHER_EXPIRES,"aria-label":"Exam date",style:{maxWidth:"220px"}});
+    const booked = h("input",{type:"checkbox",id:"booked",checked:pl.booked});
+    const msg = h("p",{class:"muted",style:{fontSize:".88rem"}},`Your voucher expires ${fmtDate(VOUCHER_EXPIRES)}. Pick a date on or before it.`);
+    return h("section",{class:"panel stack countdown"},
+      h("span",{class:"eyebrow"},"Exam date"),
+      h("div",{class:"row"}, date, h("label",{class:"row",style:{gap:"6px"}}, booked, "Booked with Pearson VUE")),
+      msg,
+      h("div",{class:"row"},
+        h("button",{class:"btn",onclick:()=>{ if (!date.value || date.value > VOUCHER_EXPIRES){ msg.textContent = `Choose a date on or before ${fmtDate(VOUCHER_EXPIRES)}.`; msg.style.color = "var(--bad)"; return; }
+          P.settings = { examDate: date.value, booked: booked.checked, updated: Date.now() }; save(); vstate.editDate = false; render(); }},"Save"),
+        h("button",{class:"btn ghost",onclick:()=>{ vstate.editDate = false; render(); }},"Cancel"),
+        P.settings?.examDate ? h("button",{class:"back",onclick:()=>{ P.settings = { updated: Date.now() }; save(); vstate.editDate = false; render(); }},"Reset to default") : null));
+  }
+  const unseen = Q.filter(q => !P.qs[q.id]).length, missed = Q.filter(q => P.qs[q.id]?.last === 0).length;
+  const final = pl.days <= 30;
+  const target = pl.days <= 0 ? 0 : final ? 50 : Math.max(10, Math.ceil((unseen + missed) / Math.max(1, pl.days - 30)));
+  const nx = studyNext(), left = Math.max(0, target - done);
+  const sub = pl.booked ? "Booked" : "Placeholder date. Change it once your exam is booked.";
+  return h("section",{class:"panel countdown"},
+    h("div",{class:"cd-main"},
+      h("div",{class:"cd-days"}, h("b",{class:"mono"}, pl.days > 0 ? pl.days : pl.days === 0 ? "0" : "—"), h("span",{}, pl.days === 1 ? "day left" : pl.days === 0 ? "exam day" : pl.days < 0 ? "date passed" : "days left")),
+      h("div",{class:"stack",style:{gap:"6px",minWidth:0}},
+        h("div",{class:"row",style:{justifyContent:"space-between"}},
+          h("span",{class:"eyebrow"}, "Exam countdown · " + fmtDate(pl.date)),
+          h("button",{class:"back",onclick:()=>{ vstate.editDate = true; render(); }},"Change date")),
+        h("p",{class:"muted",style:{fontSize:".88rem"}}, pl.booked ? h("span",{class:"tag",css:{"--dc":"var(--good)"}},"Booked") : sub),
+        pl.days < 0 ? h("p",{},"Set your next exam date to restart the plan.")
+        : pl.days === 0 ? h("p",{},"Exam day. Read every qualifier, protect people first, think like the CISO.")
+        : [ h("div",{class:"row",style:{justifyContent:"space-between"}},
+              h("span",{}, h("b",{},`Today: ${Math.min(done,target)} / ${target}`), " questions", done >= target ? " ✓" : ""),
+              h("span",{class:"mono muted",style:{fontSize:".85rem"}}, `${unseen} unseen · ${missed} to retry`)),
+            h("div",{class:"progress"}, h("i",{style:{width:Math.min(100, done/target*100)+"%"}})),
+            final ? h("p",{style:{fontSize:".92rem"}},"Final month: take a full timed 150-question exam each week and review every miss.")
+                  : h("p",{style:{fontSize:".92rem"}}, "Study next: ", h("b",{},`D${nx.d.d} ${nx.d.title}`), h("span",{class:"muted"},` (${nx.why})`)),
+            h("div",{class:"row"},
+              final ? h("button",{class:"btn",onclick:()=>startExam({domains:D.map(x=>x.d),count:150,mode:"exam"})},"Full timed exam")
+                    : h("button",{class:"btn",onclick:()=>startExam({domains:[nx.d.d],count:Math.max(10,left||10),mode:"study"})}, left ? `Start today's ${left}` : "Do 10 more"),
+              h("button",{class:"btn ghost",onclick:()=>go("study",{d:nx.d.d})},"Study D"+nx.d.d)) ])));
+}
 
 VIEWS.study = () => {
   const d = vstate.d || 1, dom = D[d-1];
@@ -616,7 +740,7 @@ VIEWS.progress = () => {
   const tested = stats.filter(s=>s.pct!=null).sort((a,b)=>a.pct-b.pct);
   const confirm = vstate.confirm;
   return h("div",{},
-    head("Progress","Where you stand","Saved in this browser only."),
+    head("Progress","Where you stand", syncStatus==="on" ? "Synced to your Claude account across devices." : "Saved in this browser. Use a backup file to move it between devices."),
     h("div",{class:"panel stack"},
       h("h3",{},"Accuracy by domain"),
       h("div",{class:"dbars"}, stats.map(s => h("div",{class:"dbar",css:{"--dc":dc(s.d)}},
@@ -631,8 +755,19 @@ VIEWS.progress = () => {
       P.exams.length ? h("div",{class:"stack",style:{gap:"6px"}}, P.exams.slice().reverse().map(e => h("div",{class:"row mono",style:{justifyContent:"space-between",fontSize:".9rem",borderBottom:"1px solid var(--line)",paddingBottom:"6px"}},
           h("span",{}, new Date(e.date).toLocaleDateString(undefined,{month:"short",day:"numeric"})+" · "+e.mode), h("span",{},`${e.n} Qs`), h("b",{style:{color:e.score>=70?"var(--good)":"var(--bad)"}},e.score+"%"))))
         : h("p",{class:"muted"},"No sessions yet. Finish a practice exam to see it here.")),
+    h("div",{class:"panel stack",style:{marginTop:"12px"}},
+      h("h3",{},"Sync & backup"),
+      h("p",{class:"muted",style:{fontSize:".92rem"}},
+        syncStatus==="on" ? "On: progress saves to a private record in your Claude account and merges automatically on every device where you open this app on claude.ai."
+        : syncStatus==="error" ? "Sync couldn't reach your Claude account this visit. Progress is still saved in this browser."
+        : "Automatic sync works when you open the app on claude.ai. Here, export a backup file and import it on your other device. Imports merge, so nothing is overwritten."),
+      h("div",{class:"row"},
+        h("button",{class:"btn ghost",onclick:()=>exportProgress()},"Export backup"),
+        h("label",{class:"btn ghost",style:{cursor:"pointer"}},"Import backup",
+          h("input",{type:"file",accept:"application/json,.json",style:{display:"none"},onchange:e=>{ const f=e.target.files[0]; if (f) importProgress(f, m=>{ vstate.note=m; render(); }); }}))),
+      vstate.note ? h("p",{style:{fontSize:".9rem"}},vstate.note) : null),
     h("div",{class:"row",style:{marginTop:"16px"}},
-      confirm ? [h("span",{},"Erase all progress, history and flashcard boxes?"), h("button",{class:"btn",style:{background:"var(--bad)",color:"#fff"},onclick:()=>{ P={qs:{},exams:[],cards:{},videos:{}}; save(); go("progress"); }},"Yes, reset"), h("button",{class:"btn ghost",onclick:()=>{vstate.confirm=false;render();}},"Cancel")]
+      confirm ? [h("span",{},"Erase all progress, history and flashcard boxes?"), h("button",{class:"btn",style:{background:"var(--bad)",color:"#fff"},onclick:()=>{ P=Object.assign(blankP(),{settings:P.settings}); save(); go("progress"); }},"Yes, reset"), h("button",{class:"btn ghost",onclick:()=>{vstate.confirm=false;render();}},"Cancel")]
               : h("button",{class:"btn ghost",onclick:()=>{vstate.confirm=true;render();}},"Reset progress"))
   );
 };

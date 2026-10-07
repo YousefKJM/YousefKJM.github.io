@@ -19,7 +19,7 @@ window.GLOSSARY = [
 {d:1,t:"Policy",x:"Mandatory, high-level statement of management intent. Approved by senior management."},
 {d:1,t:"Standard",x:"Mandatory, specific requirement (e.g., AES-256 for data at rest)."},
 {d:1,t:"Guideline",x:"Discretionary recommendation. The only optional document type."},
-{d:1,t:"(ISC)² Canons",x:"1) Protect society 2) Act honorably, honestly, justly, responsibly, legally 3) Serve principals diligently 4) Advance the profession."},
+{d:1,t:"ISC2 Canons",x:"1) Protect society 2) Act honorably, honestly, justly, responsibly, legally 3) Serve principals diligently 4) Advance the profession."},
 {d:1,t:"GDPR breach notice",x:"Notify the supervisory authority within 72 hours of awareness where feasible. Data subjects without undue delay if high risk."},
 {d:1,t:"Trade secret",x:"Confidential business information protected as long as secrecy is maintained. No registration or expiry."},
 {d:1,t:"NIST CSF 2.0",x:"Six functions: Govern, Identify, Protect, Detect, Respond, Recover (Govern added in 2024)."},
