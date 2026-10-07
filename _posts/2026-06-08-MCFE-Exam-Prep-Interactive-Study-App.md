@@ -74,7 +74,3 @@ These are the exam traps that show up consistently — all covered in the practi
 - **Hit stack tagging applies to ALL copies** across all evidence sources
 - **Build 1803 = Windows Timeline introduced** — build number determines artifact presence
 - **Cloud OneDrive Files ≠ local OneDrive** — cloud version may have files not stored locally and shows Shared With info
-
----
-
-*Source code for the study app: [github.com/YousefKJM/MCFE-Exam-Prep](https://github.com/YousefKJM/MCFE-Exam-Prep)*
