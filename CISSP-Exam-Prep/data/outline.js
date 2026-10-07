@@ -90,4 +90,36 @@ G.push(
   {d:8,t:"COTS",x:"Commercial off-the-shelf software. No source code access, so rely on vendor assurance, testing and secure configuration."},
   {d:8,t:"Software-defined security",x:"Security controls expressed as code and policy and enforced through APIs and automation, independent of hardware."},
 );
+
+// ── AI and cloud (outline 1.12, 3.5, 7.7 and cloud items across domains) ──
+add(1, [
+  'AI governance: leadership owns AI risk (often through an AI governance committee). Start with an AI acceptable-use policy covering approved tools, which data classes may be entered, and human review. Then discover shadow AI and offer sanctioned alternatives.',
+  'AI frameworks and law: NIST AI RMF (Govern, Map, Measure, Manage), ISO/IEC 42001 (certifiable AI management system), and the EU AI Act (risk tiers: prohibited, high-risk, limited, minimal). For vendors, check whether your data trains their models, plus retention, residency and subprocessors.',
+  'Cloud assurance: you rarely audit a hyperscaler yourself, so rely on SOC 2 Type II, ISO 27001 and CSA STAR mapped to your requirements (CSA CCM and its CAIQ questionnaire). Data residency covers backups, logs and support access too. Plan an exit strategy (export formats, transition support, verified deletion).',
+]);
+add(3, [
+  'Attacks on AI: data poisoning (corrupt training data), evasion (adversarial examples at inference), model inversion and membership inference (leak training data), model extraction (steal the model by querying it), and prompt injection. MITRE ATLAS catalogs these.',
+  'Cloud architecture risks: misconfiguration is the top cause of breaches, so use CSPM for runtime drift and IaC scanning before deployment. Multi-tenancy brings isolation and side-channel risk; use dedicated hosts or confidential computing for the most sensitive workloads.',
+]);
+add(7, [
+  "Cloud forensics: you can't seize the provider's hardware and instances are ephemeral. Plan ahead with central logging, retention, automated snapshots on alert, and contract terms for log access and provider support.",
+]);
+add(8, [
+  'Building with LLMs (OWASP Top 10 for LLM Applications): treat model output as untrusted, enforce user permissions at retrieval (RAG), limit agent tools to avoid excessive agency, ground answers to reduce hallucinations, verify the provenance of downloaded models, and red team before launch.',
+]);
+G.push(
+  {d:1,t:"NIST AI RMF",x:"NIST AI Risk Management Framework. Voluntary guidance with four functions: Govern, Map, Measure, Manage."},
+  {d:1,t:"ISO/IEC 42001",x:"Certifiable standard for an AI management system (AIMS), the AI counterpart to ISO 27001."},
+  {d:1,t:"EU AI Act",x:"EU regulation classifying AI by risk: unacceptable (prohibited), high-risk (strict obligations such as human oversight and data governance), limited (transparency) and minimal."},
+  {d:1,t:"Shadow AI",x:"AI tools used without IT or security approval, which can move sensitive data outside organizational controls."},
+  {d:1,t:"CSA CCM / CAIQ",x:"Cloud Security Alliance Cloud Controls Matrix (cloud control framework mapped to ISO and NIST) and the Consensus Assessments Initiative Questionnaire used to document providers' controls."},
+  {d:3,t:"Data poisoning",x:"Corrupting training data so a model learns attacker-chosen behavior."},
+  {d:3,t:"Model inversion",x:"Querying a model to reconstruct or infer sensitive training data. Related to membership inference."},
+  {d:3,t:"Model extraction",x:"Recreating a proprietary model by systematically querying it. Counter with authentication, rate limiting and monitoring."},
+  {d:3,t:"Adversarial example",x:"Input with subtle, crafted changes that cause a model to misclassify it (evasion attack)."},
+  {d:3,t:"MITRE ATLAS",x:"Knowledge base of adversary tactics and techniques against AI/ML systems, modeled on ATT&CK."},
+  {d:3,t:"CSPM",x:"Cloud Security Posture Management. Continuously detects cloud misconfigurations and compliance drift."},
+  {d:8,t:"Excessive agency",x:"OWASP LLM risk: an AI agent given more tools or permissions than needed, so manipulation causes real damage. Counter with least privilege and human approval."},
+  {d:8,t:"RAG",x:"Retrieval-augmented generation. The model answers using retrieved documents, so retrieval must enforce the user's permissions."},
+);
 })();
