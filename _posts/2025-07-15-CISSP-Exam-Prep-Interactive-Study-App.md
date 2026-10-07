@@ -4,7 +4,7 @@ excerpt: "A fully interactive study tool for the ISC2 CISSP exam: 500 practice q
 layout: post
 tags: [CISSP, certification, GRC, security-leadership]
 ---
-After the [MCFE study app](/MCFE-Exam-Prep-Interactive-Study-App/), I built the same kind of tool for the **ISC2 CISSP**. CISSP is a different animal. It's less about knowing where an artifact lives and more about choosing the answer a CISO would give the board. So the app trains judgment as much as recall: a 500-question bank with a timed exam mode, mind maps and study notes for all 8 domains, a guided video track, spaced-repetition flashcards, and scenario drills written from the manager's chair.
+This is an interactive study app I built for the **ISC2 CISSP** exam. CISSP is a different animal. It's less about knowing where an artifact lives and more about choosing the answer a CISO would give the board. So the app trains judgment as much as recall: a 500-question bank with a timed exam mode, mind maps and study notes for all 8 domains, a guided video track, spaced-repetition flashcards, and scenario drills written from the manager's chair.
 
 Use it below. It runs entirely in the browser, no account required.
 
@@ -36,7 +36,7 @@ Mixed sessions are weighted to the official domain percentages and serve questio
 Condensed key points and an interactive concept map for each of the 8 domains, from Security & Risk Management through Software Development Security.
 
 **Video Lessons**  
-All 30 videos from Destination Certification's [CISSP MindMaps (Updated for 2026)](https://www.youtube.com/playlist?list=PLZKdGEfEyJhLd-pJhAD7dNbJyUgpqI4pu) playlist, about 7 hours in total, mapped to their domains. Tick each one off as you watch, see how much runtime is left, and run a quick drill on that topic while it's fresh.
+All 30 videos from Destination Certification's [CISSP MindMaps](https://www.youtube.com/playlist?list=PLZKdGEfEyJhLd-pJhAD7dNbJyUgpqI4pu) playlist, about 7 hours in total, mapped to their domains. Tick each one off as you watch, see how much runtime is left, and run a quick drill on that topic while it's fresh.
 
 **Flashcards**  
 134 terms, formulas and models with Leitner spaced repetition. Cards you know come back less often; misses come back tomorrow.
