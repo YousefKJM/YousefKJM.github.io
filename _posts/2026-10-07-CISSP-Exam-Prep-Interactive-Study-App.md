@@ -1,10 +1,10 @@
 ---
 title: "CISSP Exam Prep: Interactive Study App"
-excerpt: "A fully interactive study tool for the ISC2 CISSP exam: 200 practice questions with study and timed exam modes, mind maps for all 8 domains, a 30-video MindMaps track, spaced-repetition flashcards, and manager-mindset scenario drills. Built while studying for the cert."
+excerpt: "A fully interactive study tool for the ISC2 CISSP exam: 500 practice questions with study and timed exam modes, mind maps for all 8 domains, a 30-video MindMaps track, spaced-repetition flashcards, and manager-mindset scenario drills. Built while studying for the cert."
 layout: post
 tags: [CISSP, certification, GRC, security-leadership]
 ---
-After the [MCFE study app](/MCFE-Exam-Prep-Interactive-Study-App/), I built the same kind of tool for the **ISC2 CISSP**. CISSP is a different animal. It's less about knowing where an artifact lives and more about choosing the answer a CISO would give the board. So the app trains judgment as much as recall: a 200-question bank with a timed exam mode, mind maps and study notes for all 8 domains, a guided video track, spaced-repetition flashcards, and scenario drills written from the manager's chair.
+After the [MCFE study app](/MCFE-Exam-Prep-Interactive-Study-App/), I built the same kind of tool for the **ISC2 CISSP**. CISSP is a different animal. It's less about knowing where an artifact lives and more about choosing the answer a CISO would give the board. So the app trains judgment as much as recall: a 500-question bank with a timed exam mode, mind maps and study notes for all 8 domains, a guided video track, spaced-repetition flashcards, and scenario drills written from the manager's chair.
 
 Use it below. It runs entirely in the browser, no account required.
 
@@ -25,7 +25,7 @@ Use it below. It runs entirely in the browser, no account required.
 
 ## What's inside
 
-**Practice Exam (200 questions)**  
+**Practice Exam (500 questions)**  
 Original questions written to the 2024 exam outline, each with an explanation of why the best answer beats the distractors. Two modes:
 - **Study:** see the answer after every question.
 - **Exam:** timed at 1.2 minutes per question, and answers lock on submit, just like the real adaptive (CAT) exam.
