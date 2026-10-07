@@ -67,6 +67,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .hero h1 span{color:var(--accent)}
 .seal{width:88px;height:88px;border:2px solid var(--accent);border-radius:50%;display:grid;place-items:center;text-align:center;font-family:var(--f-mono);font-size:.62rem;letter-spacing:.1em;color:var(--accent);line-height:1.3}
 .seal b{display:block;font-family:var(--f-display);font-size:1.05rem;letter-spacing:.02em}
+.seal span{display:block;white-space:nowrap;letter-spacing:.06em}
 .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-block:18px}
 .fact{background:var(--panel);padding:12px 14px}
 .fact b{display:block;font-family:var(--f-display);font-size:1.35rem}
@@ -203,7 +204,8 @@ mark{background:color-mix(in srgb,var(--accent) 35%,transparent);color:inherit;b
   .leaves{grid-template-columns:1fr}
   .dbar{grid-template-columns:96px 1fr 48px}
   .ref-item{grid-template-columns:1fr;gap:4px}
-  .seal{width:68px;height:68px}
+  .seal{width:78px;height:78px;font-size:.56rem}
+  .seal b{font-size:.95rem}
 }
 @media (max-width:420px){ .grid{grid-template-columns:1fr} .tile.wide{grid-column:span 1} }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
@@ -224,6 +226,7 @@ mark{background:color-mix(in srgb,var(--accent) 35%,transparent);color:inherit;b
 <script src="data/q7.js"></script>
 <script src="data/q8.js"></script>
 <script src="data/q9.js"></script>
+<script src="data/q10.js"></script>
 <script src="data/outline.js"></script>
 <script src="data/videos.js"></script>
 <script>
@@ -389,7 +392,7 @@ VIEWS.home = () => {
         h("span",{class:"eyebrow"},"ISC2 · Exam outline effective April 2024"),
         h("h1",{},"CISSP ",h("span",{},"Exam Prep")),
         h("p",{class:"muted"},"Built for Yousef. Study, drill, and walk in ready.")),
-      h("div",{class:"seal","aria-hidden":"true"},h("div",{},h("b",{},"CISSP"),"8 DOMAINS"))),
+      h("div",{class:"seal","aria-hidden":"true"},h("div",{},h("b",{},"CISSP"),h("span",{},"8 DOMAINS")))),
     h("div",{class:"facts"},
       [["100–150","Questions (CAT)"],["3 hrs","Time limit"],["700","Pass, of 1000 scaled"],["5 yrs","Experience, 2+ domains"]]
         .map(([b,s])=>h("div",{class:"fact"},h("b",{class:"mono"},b),h("span",{},s)))),

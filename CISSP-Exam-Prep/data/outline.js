@@ -122,4 +122,37 @@ G.push(
   {d:8,t:"Excessive agency",x:"OWASP LLM risk: an AI agent given more tools or permissions than needed, so manipulation causes real damage. Counter with least privilege and human approval."},
   {d:8,t:"RAG",x:"Retrieval-augmented generation. The model answers using retrieved documents, so retrieval must enforce the user's permissions."},
 );
+
+// ── Foundational topics and common cheat-sheet traps ──
+add(1, [
+  'Plans: strategic (about 5 years, aligned to business strategy), tactical (about 1 year: projects, budgets, staffing), operational (short-term, detailed tasks). Legal systems: common law (precedent), civil law (written codes), religious and customary law.',
+]);
+add(3, [
+  'Security modes: dedicated (everyone cleared, approved and with need-to-know for all data), system high (need-to-know for only some), compartmented (approval and need-to-know for only some), multilevel (different clearances; the system enforces separation). Lipner combines BLP and Biba for commercial use. Zachman is a general architecture matrix; SABSA adapts it for security.',
+  'Common cheat-sheet traps: US fire classes are A, B, C (electrical), D, K (cooking), not the European E and F. 802.11a is 5 GHz and 802.11b is 2.4 GHz. Differential cryptanalysis compares input and output differences; timing and power measurement is a side channel.',
+]);
+add(7, [
+  'Offsite data protection: electronic vaulting (bulk batches), remote journaling (transaction logs in near real time), database shadowing (live remote copies). Restoring from differentials needs the last full plus the latest differential; from incrementals, the last full plus every incremental in order.',
+  'Trusted recovery: failures and restarts must not bypass security, so systems fail into a secure state. Investigations: interviews gather facts; interrogations seek confessions and are usually left to law enforcement.',
+]);
+add(8, [
+  'Software change management stages: request control (requests and cost/benefit), change control (build and test), release control (approval for production). Configuration management: identification, control, status accounting, audit.',
+]);
+G.push(
+  {d:3,t:"Security modes",x:"Dedicated, system high, compartmented and multilevel. They differ in whether all users have clearance, formal approval and need-to-know for all data on the system."},
+  {d:3,t:"Lipner model",x:"Commercial model combining Bell-LaPadula (confidentiality) and Biba (integrity)."},
+  {d:3,t:"Zachman Framework",x:"Enterprise architecture matrix of what/how/where/who/when/why against stakeholder perspectives. Not security-specific."},
+  {d:7,t:"Trusted recovery",x:"Recovering from a failure without compromising security; the system fails into a secure state and only authorized staff restore it."},
+  {d:7,t:"Electronic vaulting",x:"Bulk transfer of backup data in batches to an offsite location."},
+  {d:7,t:"Remote journaling",x:"Near-real-time transfer of transaction logs offsite so a database can be rolled forward."},
+  {d:7,t:"Database shadowing",x:"Live replication of a database to one or more remote copies."},
+  {d:8,t:"Request / change / release control",x:"Software change management stages: handle requests and cost/benefit, build and test the change, approve the release to production."},
+  {d:7,t:"Polymorphic virus",x:"Malware that alters its own code on each infection to evade signatures."},
+  {d:7,t:"Multipartite virus",x:"Malware that infects more than one target type, such as the boot sector and executable files."},
+  {d:7,t:"Salami attack",x:"Many tiny thefts or changes that go unnoticed individually but add up."},
+  {d:5,t:"SESAME",x:"European SSO system that extends Kerberos with public key cryptography and privileged attribute certificates."},
+  {d:5,t:"Cognitive password",x:"Knowledge-based answers (pet's name, favorite teacher). Weak, because answers are often discoverable."},
+  {d:8,t:"Expert system",x:"Knowledge base of if-then rules plus an inference engine. Contrast with neural networks, which learn from data."},
+  {d:4,t:"Spread spectrum (FHSS/DSSS)",x:"Spreads a wireless signal across frequencies to resist interference and jamming. It provides no confidentiality."},
+);
 })();
