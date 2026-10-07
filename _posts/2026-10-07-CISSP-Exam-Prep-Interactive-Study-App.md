@@ -82,4 +82,4 @@ These are the patterns that trip up technical people, and all of them are drille
 
 ---
 
-*Source code for the study app: [github.com/YousefKJM/CISSP-Exam-Prep](https://github.com/YousefKJM/CISSP-Exam-Prep). Video content belongs to Destination Certification; the app only links to it. The practice questions are original and aren't ISC2 material.*
+*Video content belongs to Destination Certification; the app only links to it. The practice questions are original and aren't ISC2 material.*
