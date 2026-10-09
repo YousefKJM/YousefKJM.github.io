@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="From manual copy to a real pipeline: CI/CD for an internal ASP.NET app">
+  <defs>
+    <radialGradient id="pg" cx="28%" cy="30%" r="95%"><stop offset="0%" stop-color="#112236"/><stop offset="100%" stop-color="#0b0f17"/></radialGradient>
+    <marker id="pa" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="1200" height="500" fill="url(#pg)"/>
+  <g stroke="#15202e" stroke-width="1" opacity="0.7"><path d="M0 125H1200M0 250H1200M0 375H1200M200 0V500M400 0V500M600 0V500M800 0V500M1000 0V500"/></g>
+  <!-- pipeline stages across the lower third -->
+  <g font-size="13" text-anchor="middle">
+    <g>
+      <circle cx="120" cy="400" r="30" fill="#0b0f17" stroke="#2dd4bf" stroke-width="2"/><text x="120" y="405" fill="#5eead4" font-weight="700">Dev</text>
+      <text x="120" y="452" fill="#9aa3b8">commit</text>
+    </g>
+    <line x1="152" y1="400" x2="233" y2="400" stroke="#2dd4bf" stroke-width="2" marker-end="url(#pa)"/>
+    <g>
+      <circle cx="270" cy="400" r="30" fill="#0b0f17" stroke="#2dd4bf" stroke-width="2"/><text x="270" y="405" fill="#5eead4" font-weight="700">Build</text>
+      <text x="270" y="452" fill="#9aa3b8">one artifact</text>
+    </g>
+    <line x1="302" y1="400" x2="383" y2="400" stroke="#2dd4bf" stroke-width="2" marker-end="url(#pa)"/>
+    <g>
+      <circle cx="420" cy="400" r="30" fill="#0b0f17" stroke="#2dd4bf" stroke-width="2"/><text x="420" y="405" fill="#5eead4" font-weight="700">UAT</text>
+      <text x="420" y="452" fill="#9aa3b8">validate</text>
+    </g>
+    <line x1="452" y1="400" x2="533" y2="400" stroke="#2dd4bf" stroke-width="2" marker-end="url(#pa)"/>
+    <g>
+      <circle cx="570" cy="400" r="30" fill="#0e2a3a" stroke="#f5b84a" stroke-width="2"/><text x="570" y="405" fill="#f5b84a" font-weight="700">✓</text>
+      <text x="570" y="452" fill="#9aa3b8">approve</text>
+    </g>
+    <line x1="602" y1="400" x2="683" y2="400" stroke="#2dd4bf" stroke-width="2" marker-end="url(#pa)"/>
+    <g>
+      <circle cx="720" cy="400" r="30" fill="#2dd4bf" fill-opacity="0.15" stroke="#2dd4bf" stroke-width="2.5"/><text x="720" y="405" fill="#5eead4" font-weight="700">Prod</text>
+      <text x="720" y="452" fill="#9aa3b8">same artifact</text>
+    </g>
+  </g>
+  <text x="70" y="140" fill="#e7e9f0" font-size="54" font-weight="800" letter-spacing="-1">From manual copy</text>
+  <text x="70" y="196" fill="#e7e9f0" font-size="54" font-weight="800" letter-spacing="-1">to a real pipeline</text>
+  <text x="72" y="242" fill="#5eead4" font-size="22" font-weight="600">CI/CD for an internal ASP.NET app — no internet, no GitHub</text>
+  <text x="72" y="282" fill="#9aa3b8" font-size="18">Dev → UAT → Prod on an on-prem Azure DevOps Server, with approvals and rollback</text>
+</svg>
